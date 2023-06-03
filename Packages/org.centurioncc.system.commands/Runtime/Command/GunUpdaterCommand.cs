@@ -1,9 +1,10 @@
-﻿using DerpyNewbie.Common;
+﻿using CenturionCC.System.Gun.MassGun;
+using DerpyNewbie.Common;
 using DerpyNewbie.Logger;
 using UdonSharp;
 using UnityEngine;
 
-namespace CenturionCC.System.Gun.MassGun
+namespace CenturionCC.System.Command
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class GunUpdaterCommand : NewbieConsoleCommandHandler

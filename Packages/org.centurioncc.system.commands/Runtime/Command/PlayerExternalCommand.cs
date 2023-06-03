@@ -1,17 +1,19 @@
-﻿using DerpyNewbie.Common;
+﻿using CenturionCC.System.Player.External.HitDisplay;
+using CenturionCC.System.Player.External.PlayerTag;
+using DerpyNewbie.Common;
 using DerpyNewbie.Logger;
 using UdonSharp;
 using UnityEngine;
 
-namespace CenturionCC.System.Player.PlayerExternal
+namespace CenturionCC.System.Command
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class PlayerExternalCommand : NewbieConsoleCommandHandler
     {
         [SerializeField] [HideInInspector] [NewbieInject]
-        private ExternalPlayerTagManager playerTagManager;
-        [SerializeField] [HideInInspector] [NewbieInject]
         private ExternalHitDisplayManager hitDisplayManager;
+        [SerializeField] [HideInInspector] [NewbieInject]
+        private ExternalPlayerTagManager playerTagManager;
 
         public override string Label => "PlayerExternal";
         public override string[] Aliases => new[] { "PlayerExt", "PExt" };
