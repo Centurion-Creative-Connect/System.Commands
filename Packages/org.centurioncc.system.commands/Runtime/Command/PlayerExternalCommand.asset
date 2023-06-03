@@ -21,7 +21,7 @@ MonoBehaviour:
   compiledVersion: 2
   behaviourSyncMode: 1
   hasInteractEvent: 0
-  scriptID: 3309621387226330216
+  scriptID: -6154884700769508972
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 
@@ -206,19 +206,20 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: playerTagManager
+      Data: hitDisplayManager
     - Name: $v
       Entry: 7
       Data: 10|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: playerTagManager
+      Data: hitDisplayManager
     - Name: <UserType>k__BackingField
       Entry: 7
       Data: 11|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: CenturionCC.System.Player.PlayerExternal.ExternalPlayerTagManager, CenturionCC.System
+      Data: CenturionCC.System.Player.External.HitDisplay.ExternalHitDisplayManager,
+        CenturionCC.System
     - Name: 
       Entry: 8
       Data: 
@@ -278,19 +279,20 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: hitDisplayManager
+      Data: playerTagManager
     - Name: $v
       Entry: 7
       Data: 16|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: hitDisplayManager
+      Data: playerTagManager
     - Name: <UserType>k__BackingField
       Entry: 7
       Data: 17|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: CenturionCC.System.Player.PlayerExternal.ExternalHitDisplayManager, CenturionCC.System
+      Data: CenturionCC.System.Player.External.PlayerTag.ExternalPlayerTagManager,
+        CenturionCC.System
     - Name: 
       Entry: 8
       Data: 

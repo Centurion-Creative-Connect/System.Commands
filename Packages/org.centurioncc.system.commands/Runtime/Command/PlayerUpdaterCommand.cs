@@ -1,9 +1,10 @@
-﻿using DerpyNewbie.Common;
+﻿using CenturionCC.System.Player.MassPlayer;
+using DerpyNewbie.Common;
 using DerpyNewbie.Logger;
 using UdonSharp;
 using UnityEngine;
 
-namespace CenturionCC.System.Player.MassPlayer
+namespace CenturionCC.System.Command
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class PlayerUpdaterCommand : NewbieConsoleCommandHandler
