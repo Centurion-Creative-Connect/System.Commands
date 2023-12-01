@@ -1,6 +1,6 @@
 {
   "name": "org.centurioncc.system.commands",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "displayName": "Centurion System Commands",
   "description": "Additional NewbieConsole commands module for Centurion System",
   "unity": "2019.4",
@@ -10,12 +10,9 @@
     "url": "https://github.com/derpynewbie"
   },
   "vpmDependencies": {
-    "com.vrchat.worlds": "~3.2.0",
-    "com.vrchat.udonsharp": "~1.1.0",
+    "com.vrchat.worlds": "~3.4.0",
     "dev.derpynewbie.common": "~0.3.4",
-    "dev.derpynewbie.logger": "~0.1.8",
-    "org.centurioncc.system": "~0.5.0"
+    "dev.derpynewbie.logger": "~0.1.8"
   },
-  "url": "https://github.com/Centurion-Creative-Connect/System.Commands/releases/download/0.4.1/org.centurioncc.system.commands-0.4.1.zip",
   "hideInEditor": false
 }
