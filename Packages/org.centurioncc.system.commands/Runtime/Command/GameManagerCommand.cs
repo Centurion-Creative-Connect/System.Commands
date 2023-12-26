@@ -16,7 +16,7 @@ namespace CenturionCC.System.Command
         public override string Label => "GameManager";
         public override string[] Aliases => new[] { "Game" };
         public override string Usage =>
-            "<command> <canShoot|testHitRemote|testHitLocal|isMod|useHaptic|version|license>";
+            "<command> <canShoot|isMod|useHaptic|version|license>";
         public override string Description =>
             "Adjusts some game settings or prints out version/license of this project.";
 
@@ -28,24 +28,8 @@ namespace CenturionCC.System.Command
             {
                 case "canshoot":
                 {
-                    console.Println($"CanShoot: {gameManager.CanShoot()}");
-                    return ConsoleLiteral.Of(gameManager.CanShoot());
-                }
-                case "testhitremote":
-                {
-                    console.Println("Playing onDeath for all players except local");
-                    foreach (var player in gameManager.players.GetPlayers())
-                        if (player != null && player.IsAssigned && !player.IsLocal)
-                            player.OnDeath();
-                    return ConsoleLiteral.GetNone();
-                }
-                case "testhitlocal":
-                {
-                    console.Println("Playing onDeath for local player if exist");
-                    var localPlayer = gameManager.players.GetLocalPlayer();
-                    if (localPlayer != null)
-                        localPlayer.OnDeath();
-                    return ConsoleLiteral.GetNone();
+                    console.Println($"CanShoot: {gameManager.guns.CanLocalShoot}");
+                    return ConsoleLiteral.Of(gameManager.guns.CanLocalShoot);
                 }
                 case "mod":
                 case "moderator":
