@@ -57,6 +57,7 @@ namespace CenturionCC.System.Command
                                         "   regionAdd <regionId> <teamId>\n" +
                                         "   showTeamTag [true|false]\n" +
                                         "   friendlyFire [true|false]\n" +
+                                        "   friendlyFireMode [always|both|reverse|warning|never]" +
                                         "   disguise [true|false]\n" +
                                         "   roleSpecific [true|false]\n" +
                                         "   update\n" +
@@ -150,6 +151,15 @@ namespace CenturionCC.System.Command
                             "All",
                             _requestVersion));
                         playerManager.MasterOnly_SetFriendlyFire(_targetTeam == 1);
+                        return;
+                    }
+                    case OpFriendlyFireModeChange:
+                    {
+                        _console.Println(string.Format(ReceivedFormat,
+                            nameof(OpFriendlyFireModeChange),
+                            ((FriendlyFireMode)_targetTeam).ToEnumName(),
+                            _requestVersion));
+                        playerManager.MasterOnly_SetFriendlyFireMode((FriendlyFireMode)_targetTeam);
                         return;
                     }
                     case OpTeamReset:
@@ -912,6 +922,40 @@ namespace CenturionCC.System.Command
                             "All", ConsoleParser.TryParseBoolAsInt(vars[1], playerManager.AllowFriendlyFire), true);
                     console.Println($"Allow Friendly Fire: {playerManager.AllowFriendlyFire}");
                     return playerManager.AllowFriendlyFire;
+                case "ffmode":
+                case "friendlyfiremode":
+                    if (vars.Length >= 2)
+                    {
+                        var mode = vars[1];
+                        var modeEnum = playerManager.FriendlyFireMode;
+                        switch (mode.ToLower())
+                        {
+                            case "always":
+                                modeEnum = FriendlyFireMode.Always;
+                                break;
+                            case "reverse":
+                                modeEnum = FriendlyFireMode.Reverse;
+                                break;
+                            case "both":
+                                modeEnum = FriendlyFireMode.Both;
+                                break;
+                            case "warning":
+                                modeEnum = FriendlyFireMode.Warning;
+                                break;
+                            case "never":
+                                modeEnum = FriendlyFireMode.Never;
+                                break;
+                            default:
+                                console.Println("could not parse friendly fire mode enum");
+                                return false;
+                        }
+
+                        return SendGenericRequest(console, OpFriendlyFireModeChange, nameof(OpFriendlyFireModeChange),
+                            -1, modeEnum.ToEnumName(), (int)modeEnum, true);
+                    }
+
+                    console.Println(playerManager.FriendlyFireMode.ToEnumName());
+                    return playerManager.AllowFriendlyFire;
                 case "u":
                 case "update":
                     return HandleUpdate(console);
@@ -1021,6 +1065,7 @@ namespace CenturionCC.System.Command
         private const int OpStaffTagChange = 14;
         private const int OpTeamRegionChange = 15;
         private const int OpCreatorTagChange = 16;
+        private const int OpFriendlyFireModeChange = 17;
 
         #endregion
     }
