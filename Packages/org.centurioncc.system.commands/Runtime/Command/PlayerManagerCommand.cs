@@ -9,9 +9,8 @@ using VRC.Udon.Common.Interfaces;
 
 namespace CenturionCC.System.Command
 {
-    // TODO: fully integrate newbie console
     [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-    public class PlayerManagerCommand : BoolCommandHandler
+    public class PlayerManagerCommand : NewbieConsoleCommandHandler
     {
         private const string Prefix = "[PlayerManagerCommand] ";
         private const string RequestedFormat = Prefix + "Requested to {0} player {1} with request version of {2}";
@@ -57,6 +56,7 @@ namespace CenturionCC.System.Command
                                         "   regionAdd <regionId> <teamId>\n" +
                                         "   showTeamTag [true|false]\n" +
                                         "   friendlyFire [true|false]\n" +
+                                        "   friendlyFireMode [always|both|reverse|warning|never]" +
                                         "   disguise [true|false]\n" +
                                         "   roleSpecific [true|false]\n" +
                                         "   update\n" +
@@ -150,6 +150,15 @@ namespace CenturionCC.System.Command
                             "All",
                             _requestVersion));
                         playerManager.MasterOnly_SetFriendlyFire(_targetTeam == 1);
+                        return;
+                    }
+                    case OpFriendlyFireModeChange:
+                    {
+                        _console.Println(string.Format(ReceivedFormat,
+                            nameof(OpFriendlyFireModeChange),
+                            ((FriendlyFireMode)_targetTeam).ToEnumName(),
+                            _requestVersion));
+                        playerManager.MasterOnly_SetFriendlyFireMode((FriendlyFireMode)_targetTeam);
                         return;
                     }
                     case OpTeamReset:
@@ -343,7 +352,7 @@ namespace CenturionCC.System.Command
             }
         }
 
-        private bool HandleLocalPlayer(NewbieConsole console)
+        private string HandleLocalPlayer(NewbieConsole console)
         {
             var hasLocal = playerManager.HasLocalPlayer();
             var player = playerManager.GetLocalPlayer();
@@ -355,10 +364,10 @@ namespace CenturionCC.System.Command
                 $"You are <color=green>{(hasLocal ? "in" : "not in")}</color> " +
                 $"game with index of <color=green>{index}</color>, " +
                 $"which is <color=green>{playerName}</color>!");
-            return true;
+            return ConsoleLiteral.Of(hasLocal);
         }
 
-        private bool HandleDebug(NewbieConsole console, string label, string[] arguments)
+        private string HandleDebug(NewbieConsole console, string label, string[] arguments)
         {
             if (arguments != null && arguments.Length >= 2)
             {
@@ -373,20 +382,20 @@ namespace CenturionCC.System.Command
             }
 
             console.Println($"IsPMDebug: {playerManager.IsDebug}");
-            return true;
+            return ConsoleLiteral.Of(playerManager.IsDebug);
         }
 
-        private bool HandleUpdate(NewbieConsole console)
+        private string HandleUpdate(NewbieConsole console)
         {
             playerManager.UpdateLocalPlayer();
             playerManager.UpdateAllPlayerView();
 
             console.Println(
                 "<color=green>Successfully </color><color=orange>updated</color><color=green> local player</color>");
-            return true;
+            return ConsoleLiteral.GetNone();
         }
 
-        private bool SendGenericRequest(NewbieConsole console,
+        private string SendGenericRequest(NewbieConsole console,
             int targetOp, string targetOpName,
             int targetPlayerId, string targetPlayerName,
             int targetTeam, bool requireMod)
@@ -394,7 +403,7 @@ namespace CenturionCC.System.Command
             if (requireMod && !console.IsSuperUser)
             {
                 console.Println("<color=red>Cannot execute this unless you're moderator!</color>");
-                return true;
+                return ConsoleLiteral.Of(false);
             }
 
             _targetOperation = targetOp;
@@ -407,10 +416,10 @@ namespace CenturionCC.System.Command
                 targetOpName,
                 targetPlayerName,
                 _requestVersion));
-            return true;
+            return ConsoleLiteral.Of(true);
         }
 
-        private bool SendPlayerRequest(NewbieConsole console, string[] arguments,
+        private string SendPlayerRequest(NewbieConsole console, string[] arguments,
             int targetOp, string targetOpName,
             int targetTeam, bool requireModForTarget, bool requireModForExecute)
         {
@@ -420,14 +429,14 @@ namespace CenturionCC.System.Command
                 if (requireModForTarget && !console.CurrentRole.HasPermission())
                 {
                     console.Println("<color=red>Cannot specify player id unless you're moderator!</color>");
-                    return true;
+                    return ConsoleLiteral.Of(false);
                 }
 
                 target = ConsoleParser.TryParsePlayer(arguments[1]);
                 if (target == null)
                 {
                     console.Println("<color=red>Player id or name is invalid</color>");
-                    return true;
+                    return ConsoleLiteral.Of(false);
                 }
             }
 
@@ -440,7 +449,7 @@ namespace CenturionCC.System.Command
             );
         }
 
-        private bool SendAllRequest(NewbieConsole console, int targetOp, string targetOpName, bool requireMod)
+        private string SendAllRequest(NewbieConsole console, int targetOp, string targetOpName, bool requireMod)
         {
             return SendGenericRequest
             (
@@ -451,34 +460,29 @@ namespace CenturionCC.System.Command
             );
         }
 
-        private bool HandleRequestSync(NewbieConsole console, string[] arguments)
+        private string HandleRequestSync(NewbieConsole console, string[] arguments)
         {
             if (arguments == null || arguments.Length < 2)
             {
                 console.Println(
                     $"<color=red>Please specify shooter player's index: 0 ~ {playerManager.GetMaxPlayerCount() - 1}");
-                return true;
+                return ConsoleLiteral.Of(false);
             }
 
-            _targetOperation = OpSync;
-            _targetPlayerId = ConsoleParser.TryParseInt(arguments[1]);
-            _targetTeam = -1;
-            ++_requestVersion;
-            Networking.SetOwner(Networking.LocalPlayer, gameObject);
-            RequestSerialization();
-            console.Println(string.Format(RequestedFormat,
-                nameof(OpSync),
-                $"ShooterPlayer:{_targetPlayerId}",
-                _requestVersion));
-            return true;
+            return SendGenericRequest(
+                console,
+                OpSync, nameof(OpSync),
+                ConsoleParser.TryParseInt(arguments[1]), $"PlayerBase:{_targetPlayerId}",
+                -1, false
+            );
         }
 
-        private bool HandleRequestTeamChange(NewbieConsole console, string[] arguments)
+        private string HandleRequestTeamChange(NewbieConsole console, string[] arguments)
         {
             if (arguments == null || arguments.Length <= 1)
             {
                 console.Println("<color=red>Usage: <command> team <team_id> [playerId]</color>");
-                return false;
+                return ConsoleLiteral.Of(false);
             }
 
             var targetPlayer = Networking.LocalPlayer;
@@ -486,7 +490,7 @@ namespace CenturionCC.System.Command
             if (targetTeam == -1)
             {
                 console.Println("<color=red>Specified team is invalid</color>");
-                return true;
+                return ConsoleLiteral.Of(false);
             }
 
             if (arguments.Length >= 3 && console.CurrentRole.HasPermission())
@@ -495,97 +499,95 @@ namespace CenturionCC.System.Command
                 if (targetPlayer == null)
                 {
                     console.Println("<color=red>Player id or name is invalid</color>");
-                    return true;
+                    return ConsoleLiteral.Of(false);
                 }
             }
 
-            _targetOperation = OpTeamChange;
-            _targetPlayerId = targetPlayer.playerId;
-            _targetTeam = targetTeam;
-            ++_requestVersion;
-            Networking.SetOwner(Networking.LocalPlayer, gameObject);
-            RequestSerialization();
-            console.Println(string.Format(RequestedFormat,
+            return SendGenericRequest(
+                console,
+                OpTeamChange,
                 nameof(OpTeamChange),
+                targetPlayer.playerId,
                 $"{NewbieUtils.GetPlayerName(targetPlayer)} to {_targetTeam}",
-                _requestVersion));
-            return true;
+                _targetTeam,
+                false
+            );
         }
 
-        private bool HandleRequestTeamShuffle(NewbieConsole console, string[] args)
+        private string HandleRequestTeamShuffle(NewbieConsole console, string[] args)
         {
             if (!console.CurrentRole.HasPermission())
             {
                 console.Println("You are not allowed to shuffle team unless you're moderator!");
-                return true;
+                return ConsoleLiteral.Of(false);
             }
 
-            _targetOperation = OpTeamShuffle;
-            _targetPlayerId = -1;
             // 2 bool compressed into int, in byte: ...00xy where y = include moderators, x = include green and blue.
-            _targetTeam = 0;
+            var shuffleMode = 0;
             if (args.Length == 2)
-                _targetTeam = ConsoleParser.TryParseBoolAsInt(args[1], false);
+                shuffleMode = ConsoleParser.TryParseBoolAsInt(args[1], false);
             if (args.Length == 3)
-                _targetTeam = ConsoleParser.TryParseBoolAsInt(args[1], false) +
+                shuffleMode = ConsoleParser.TryParseBoolAsInt(args[1], false) +
                               ConsoleParser.TryParseBoolAsInt(args[2], false) * 2;
-            ++_requestVersion;
-            Networking.SetOwner(Networking.LocalPlayer, gameObject);
-            RequestSerialization();
-            console.Println(string.Format(RequestedFormat,
-                nameof(OpTeamShuffle),
-                $"All({_targetTeam}){(_IsBitSet(_targetTeam, 1) ? " +include_moderators" : "")}{(_IsBitSet(_targetTeam, 2) ? " +include_greenAndBlue" : "")}",
-                _requestVersion));
-            return true;
+
+            return SendGenericRequest(
+                console,
+                OpTeamShuffle, nameof(OpTeamShuffle),
+                _targetPlayerId = -1,
+                $"All({shuffleMode}){(_IsBitSet(shuffleMode, 1) ? " +include_moderators" : "")}{(_IsBitSet(shuffleMode, 2) ? " +include_greenAndBlue" : "")}",
+                shuffleMode,
+                true
+            );
         }
 
-        private bool HandleRequestTeamRegionAdd(NewbieConsole console, string[] arguments)
+        private string HandleRequestTeamRegionAdd(NewbieConsole console, string[] arguments)
         {
             if (!console.CurrentRole.HasPermission())
             {
                 console.Println("You are not allowed to region add team unless you're moderator!");
-                return true;
+                return ConsoleLiteral.Of(false);
             }
 
             if (arguments.Length <= 1)
             {
                 console.Println(
                     "<color=red>Please specify region ID and team ID: <command> <regionId> <teamId></color>");
-                return true;
+                return ConsoleLiteral.Of(false);
             }
 
             _targetOperation = OpTeamRegionChange;
-            // playerId == regionId
-            _targetPlayerId = ConsoleParser.TryParseInt(arguments[1]);
-            _targetTeam = ConsoleParser.TryParseInt(arguments[2]);
+            var regionId = ConsoleParser.TryParseInt(arguments[1]);
+            var targetTeamId = ConsoleParser.TryParseInt(arguments[2]);
 
-            if (_targetPlayerId < 0 || _targetPlayerId >= teamRegions.Length)
+            if (regionId < 0 || regionId >= teamRegions.Length)
             {
-                _console.Println(
-                    $"<color=red>Target region ID is invalid: {_targetPlayerId}</color>");
-                return true;
+                _console.Println($"<color=red>Target region ID is invalid: {regionId}</color>");
+                return ConsoleLiteral.Of(false);
             }
 
-            _requestVersion++;
-            Networking.SetOwner(Networking.LocalPlayer, gameObject);
-            RequestSerialization();
-            _console.Println(string.Format(RequestedFormat, nameof(OpTeamRegionChange),
-                $"All inside region id of {_targetPlayerId} to team id of {_targetTeam}", _requestVersion));
-            return true;
+            return SendGenericRequest(
+                console,
+                OpTeamRegionChange,
+                nameof(OpTeamRegionChange),
+                regionId,
+                $"All inside region id of {regionId} to team id of {targetTeamId}",
+                targetTeamId,
+                true
+            );
         }
 
-        private bool HandleRequestShowTeamTag(NewbieConsole console, string[] arguments)
+        private string HandleRequestShowTeamTag(NewbieConsole console, string[] arguments)
         {
             if (!console.CurrentRole.HasPermission())
             {
                 console.Println("You are not allowed to change team tag on/off unless you're moderator!");
-                return true;
+                return ConsoleLiteral.Of(false);
             }
 
             if (arguments.Length <= 1)
             {
                 console.Println("<color=red>On/Off not specified</color>");
-                return true;
+                return ConsoleLiteral.Of(false);
             }
 
             return SendGenericRequest
@@ -597,18 +599,18 @@ namespace CenturionCC.System.Command
             );
         }
 
-        private bool HandleRequestShowStaffTag(NewbieConsole console, string[] arguments)
+        private string HandleRequestShowStaffTag(NewbieConsole console, string[] arguments)
         {
             if (!console.CurrentRole.HasPermission())
             {
                 console.Println("You are not allowed to change staff tag on/off unless you're moderator!");
-                return true;
+                return ConsoleLiteral.Of(false);
             }
 
             if (arguments.Length <= 1)
             {
                 console.Println("<color=red>On/Off not specified</color>");
-                return true;
+                return ConsoleLiteral.Of(false);
             }
 
             return SendGenericRequest
@@ -620,18 +622,18 @@ namespace CenturionCC.System.Command
             );
         }
 
-        private bool HandleRequestShowCreatorTag(NewbieConsole console, string[] arguments)
+        private string HandleRequestShowCreatorTag(NewbieConsole console, string[] arguments)
         {
             if (!console.CurrentRole.HasPermission())
             {
                 console.Println("You are not allowed to change creator tag on/off unless you're moderator!");
-                return true;
+                return ConsoleLiteral.Of(false);
             }
 
             if (arguments.Length <= 1)
             {
                 console.Println("<color=red>On/Off not specified</color>");
-                return true;
+                return ConsoleLiteral.Of(false);
             }
 
             return SendGenericRequest
@@ -643,71 +645,79 @@ namespace CenturionCC.System.Command
             );
         }
 
-        private bool HandleList(NewbieConsole console, string[] arguments)
+        private string HandleList(NewbieConsole console, string[] arguments)
         {
             if (arguments.Length >= 2 && (arguments[1].Equals("-n") || arguments[1].Equals("-non-joined")))
                 return HandleNonJoinedList(console);
 
             var shooterPlayers = playerManager.GetPlayers();
-            const string format = "{0, -20}, {1, 7}, {2, 7}, {3, 7}, {4, 7}, {5, 20}";
+            const string format = "{0, -20}, {1, 7}, {2, 7}, {3, 7}, {4, 7}, {5, 20}\n";
             var activePlayerCount = 0;
+            var list = "Player Instance Statuses:\n";
+            list += string.Format(format, "Name", "Active", "Team", "KD", "Role", "Id:DisplayName");
 
-            console.NewLine();
-            console.Println("Player Instance Statuses:");
-            console.Println(string.Format(format, "Name", "Active", "Team", "KD", "Role", "Id:DisplayName"));
             foreach (var shooterPlayer in shooterPlayers)
             {
                 if (shooterPlayer == null)
                 {
-                    console.Println(string.Format(format, "null", "null", "null", "null", "null", "null"));
+                    list += string.Format(format, "null", "null", "null", "null", "null", "null");
                     continue;
                 }
 
-                console.Println(
-                    string.Format(format,
-                        shooterPlayer.name,
-                        shooterPlayer.IsAssigned,
-                        GetTeamNameByInt(shooterPlayer.TeamId),
-                        $"{shooterPlayer.Kills}/{shooterPlayer.Deaths}",
-                        shooterPlayer.Role != null ? shooterPlayer.Role.RoleName : "NULL",
-                        NewbieUtils.GetPlayerName(shooterPlayer.VrcPlayer)));
+                list += string.Format(
+                    format,
+                    shooterPlayer.name,
+                    shooterPlayer.IsAssigned,
+                    GetTeamNameByInt(shooterPlayer.TeamId),
+                    $"{shooterPlayer.Kills}/{shooterPlayer.Deaths}",
+                    shooterPlayer.Role != null ? shooterPlayer.Role.RoleName : "NULL",
+                    NewbieUtils.GetPlayerName(shooterPlayer.VrcPlayer)
+                );
+
                 if (shooterPlayer.IsAssigned)
                     ++activePlayerCount;
             }
 
-            console.NewLine();
-            console.Println(
-                $"There is <color=green>{shooterPlayers.Length}</color> possible instances, <color=green>{activePlayerCount}</color> instances active, <color=green>{shooterPlayers.Length - activePlayerCount}</color> instances stored");
-            return true;
+            list +=
+                $"\nThere is <color=green>{shooterPlayers.Length}</color> possible instances, " +
+                $"<color=green>{activePlayerCount}</color> instances active, " +
+                $"<color=green>{shooterPlayers.Length - activePlayerCount}</color> instances stored";
+
+            console.Println(list);
+
+            return list;
         }
 
-        private bool HandleNonJoinedList(NewbieConsole console)
+        private string HandleNonJoinedList(NewbieConsole console)
         {
-            const string format = "{0, -20}, {1, 7}, {2, 7}, {3, 7}";
+            const string format = "{0, -20}, {1, 7}, {2, 7}, {3, 7}\n";
             var nonJoinedCount = 0;
             var players = new VRCPlayerApi[VRCPlayerApi.GetPlayerCount()];
             players = VRCPlayerApi.GetPlayers(players);
-            console.NewLine();
-            console.Println("Non-Joined Players:");
-            console.Println(string.Format(format, "Id:DisplayName", "Master", "Local", "Mod"));
+            var list = "Non-Joined Players:";
+            list += string.Format(format, "Id:DisplayName", "Master", "Local", "Mod");
 
             foreach (var player in players)
             {
                 if (playerManager.HasPlayerIdOf(player.playerId)) continue;
-                console.Println(string.Format(format,
+
+                list += string.Format(
+                    format,
                     NewbieUtils.GetPlayerName(player),
                     player.isMaster,
                     player.isLocal,
-                    playerManager.RoleManager.GetPlayerRole(player).HasPermission()));
+                    playerManager.RoleManager.GetPlayerRole(player).HasPermission()
+                );
+
                 ++nonJoinedCount;
             }
 
-            console.NewLine();
-            console.Println($"There is <color=green>{nonJoinedCount}</color> non-joined players!");
-            return true;
+            list += $"\nThere is <color=green>{nonJoinedCount}</color> non-joined players!";
+            console.Println(list);
+            return list;
         }
 
-        private bool HandleStats(NewbieConsole console, string[] args)
+        private string HandleStats(NewbieConsole console, string[] args)
         {
             var player = playerManager.GetLocalPlayer();
 
@@ -717,7 +727,7 @@ namespace CenturionCC.System.Command
                 if (vrcPlayer == null)
                 {
                     console.Println("<color=red>Target player not found.</color>");
-                    return true;
+                    return ConsoleLiteral.Of(false);
                 }
 
                 player = playerManager.GetPlayerById(vrcPlayer.playerId);
@@ -726,18 +736,18 @@ namespace CenturionCC.System.Command
             if (player == null)
             {
                 console.Println("<color=red>Target player is not in game.</color>");
-                return true;
+                return ConsoleLiteral.Of(false);
             }
 
-            console.Println(
-                $"<color=orange><b>{NewbieUtils.GetPlayerName(player.VrcPlayer)}'s Stats</b></color>\n" +
-                $"K: {player.Kills}\n" +
-                $"D: {player.Deaths}\n" +
-                $"KDR: {(player.Deaths != 0 && player.Deaths != 0 ? $"{player.Kills / player.Deaths:F1}" : "Infinity")}");
-            return true;
+            var status = $"<color=orange><b>{NewbieUtils.GetPlayerName(player.VrcPlayer)}'s Stats</b></color>\n" +
+                         $"K: {player.Kills}\n" +
+                         $"D: {player.Deaths}\n" +
+                         $"KDR: {(player.Deaths != 0 && player.Deaths != 0 ? $"{player.Kills / player.Deaths:F1}" : "Infinity")}";
+            console.Println(status);
+            return status;
         }
 
-        private bool HandleCollider(NewbieConsole console, string[] arguments)
+        private string HandleCollider(NewbieConsole console, string[] arguments)
         {
             if (arguments.Length >= 2)
             {
@@ -750,13 +760,13 @@ namespace CenturionCC.System.Command
                     if (result == -1)
                     {
                         console.Println("Error: Collider name is invalid");
-                        return true;
+                        return ConsoleLiteral.Of(false);
                     }
                 }
 
-                console.Println(
-                    $"Collider {targetName}: {ColStatusToString(GetColliderStatusByString(playerManager, targetName))}");
-                return true;
+                var status = ColStatusToString(GetColliderStatusByString(playerManager, targetName));
+                console.Println($"Collider {targetName}: {status}");
+                return status;
             }
 
             console.Println("ColliderInfo:\n" +
@@ -764,15 +774,18 @@ namespace CenturionCC.System.Command
                             $"  useAddi: {playerManager.UseAdditionalCollider}\n" +
                             $"  useLWCo: {playerManager.UseLightweightCollider}\n" +
                             $"  alwLWCo: {playerManager.AlwaysUseLightweightCollider}");
-            return true;
+            return $"{playerManager.UseBaseCollider}, " +
+                   $"{playerManager.UseAdditionalCollider}, " +
+                   $"{playerManager.UseLightweightCollider}, " +
+                   $"{playerManager.AlwaysUseLightweightCollider}";
         }
 
-        private string ColStatusToString(int status)
+        private static string ColStatusToString(int status)
         {
             return status == 0 ? "false" : status == 1 ? "true" : "invalid";
         }
 
-        private int GetColliderStatusByString(PlayerManager playerManager, string str)
+        private static int GetColliderStatusByString(PlayerManager playerManager, string str)
         {
             switch (str.ToLower())
             {
@@ -798,7 +811,7 @@ namespace CenturionCC.System.Command
             }
         }
 
-        private int SetColliderStatusByString(PlayerManager playerManager, string str, bool isEnabled)
+        private static int SetColliderStatusByString(PlayerManager playerManager, string str, bool isEnabled)
         {
             // ReSharper disable AssignmentInConditionalExpression
             switch (str.ToLower())
@@ -826,7 +839,7 @@ namespace CenturionCC.System.Command
             // ReSharper restore AssignmentInConditionalExpression
         }
 
-        private string GetTeamNameByInt(int teamId)
+        private static string GetTeamNameByInt(int teamId)
         {
             return teamId == 0 ? "non" :
                 teamId == 1 ? "red" :
@@ -835,18 +848,14 @@ namespace CenturionCC.System.Command
                 teamId == 4 ? "blu" : $"?:{teamId}";
         }
 
-        private bool _IsBitSet(int n, int p)
+        private static bool _IsBitSet(int n, int p)
         {
             return ((n >> (p - 1)) & 1) == 1;
         }
 
-        public override bool OnBoolCommand(NewbieConsole console, string label, ref string[] vars, ref string[] envVars)
+        public override string OnCommand(NewbieConsole console, string label, string[] vars, ref string[] envVars)
         {
-            if (vars == null || vars.Length == 0)
-            {
-                console.PrintUsage(this);
-                return false;
-            }
+            if (vars == null || vars.Length == 0) return console.PrintUsage(this);
 
             // ReSharper disable StringLiteralTypo
             switch (vars[0].ToLower())
@@ -911,7 +920,42 @@ namespace CenturionCC.System.Command
                         return SendGenericRequest(console, OpFriendlyFireChange, nameof(OpFriendlyFireChange), -1,
                             "All", ConsoleParser.TryParseBoolAsInt(vars[1], playerManager.AllowFriendlyFire), true);
                     console.Println($"Allow Friendly Fire: {playerManager.AllowFriendlyFire}");
-                    return playerManager.AllowFriendlyFire;
+                    return ConsoleLiteral.Of(playerManager.AllowFriendlyFire);
+                case "ffmode":
+                case "friendlyfiremode":
+                    if (vars.Length >= 2)
+                    {
+                        var mode = vars[1];
+                        var modeEnum = playerManager.FriendlyFireMode;
+                        switch (mode.ToLower())
+                        {
+                            case "always":
+                                modeEnum = FriendlyFireMode.Always;
+                                break;
+                            case "reverse":
+                                modeEnum = FriendlyFireMode.Reverse;
+                                break;
+                            case "both":
+                                modeEnum = FriendlyFireMode.Both;
+                                break;
+                            case "warning":
+                                modeEnum = FriendlyFireMode.Warning;
+                                break;
+                            case "never":
+                                modeEnum = FriendlyFireMode.Never;
+                                break;
+                            default:
+                                console.Println("could not parse friendly fire mode enum");
+                                return ConsoleLiteral.Of(false);
+                        }
+
+                        return SendGenericRequest(console, OpFriendlyFireModeChange, nameof(OpFriendlyFireModeChange),
+                            -1, modeEnum.ToEnumName(), (int)modeEnum, true);
+                    }
+
+                    var ffModeString = playerManager.FriendlyFireMode.ToEnumName();
+                    console.Println(ffModeString);
+                    return ffModeString;
                 case "u":
                 case "update":
                     return HandleUpdate(console);
@@ -928,8 +972,7 @@ namespace CenturionCC.System.Command
                 case "collider":
                     return HandleCollider(console, vars);
                 default:
-                    console.PrintUsage(this);
-                    return false;
+                    return console.PrintUsage(this);
             }
             // ReSharper restore StringLiteralTypo
         }
@@ -1021,6 +1064,7 @@ namespace CenturionCC.System.Command
         private const int OpStaffTagChange = 14;
         private const int OpTeamRegionChange = 15;
         private const int OpCreatorTagChange = 16;
+        private const int OpFriendlyFireModeChange = 17;
 
         #endregion
     }
