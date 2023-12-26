@@ -1,7 +1,5 @@
 # VRCHAT INC.
-
 ### VRCHAT DISTRO LICENSE FILE
-
 Version: February 24, 2022
 
 **SUMMARY OF TERMS:** Any materials subject to this Distro Asset License may be distributed by you, with or without
