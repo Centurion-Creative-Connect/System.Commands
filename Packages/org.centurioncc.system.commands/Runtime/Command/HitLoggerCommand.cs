@@ -4,7 +4,7 @@ using DerpyNewbie.Logger;
 using UdonSharp;
 using UnityEngine;
 
-namespace DerpyNewbie.Shooter
+namespace CenturionCC.System.Command
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class HitLoggerCommand : NewbieConsoleCommandHandler
@@ -28,6 +28,7 @@ namespace DerpyNewbie.Shooter
 
             vars = vars.RemoveItem("-s", out var suppress);
 
+            // ReSharper disable StringLiteralTypo
             switch (vars[0].ToLower())
             {
                 case "debuglog":
@@ -74,6 +75,7 @@ namespace DerpyNewbie.Shooter
                     console.PrintUsage(this);
                     return ConsoleLiteral.GetNone();
             }
+            // ReSharper restore StringLiteralTypo
         }
     }
 }
