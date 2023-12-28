@@ -20,7 +20,7 @@ namespace CenturionCC.System.Command
         public override string OnCommand(NewbieConsole console, string label, string[] vars, ref string[] envVars)
         {
             if (vars.Length == 0) return console.PrintUsage(this);
-            var hasValue = vars.Length <= 2;
+            var hasValue = vars.Length >= 2;
             var value = hasValue ? vars[1] : "";
 
             switch (vars[0].ToLower())
