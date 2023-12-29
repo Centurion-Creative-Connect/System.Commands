@@ -96,7 +96,7 @@ namespace CenturionCC.System.Command
             bool hasValue)
         {
             if (hasValue) target = ConsoleParser.TryParseFloat(value);
-            printable.Println(name);
+            printable.Println($"{name}: {target}");
             return ConsoleLiteral.Of(target);
         }
     }
