@@ -29,7 +29,7 @@
       "dependencies": {}
     },
     "org.centurioncc.system": {
-      "version": "0.6.0-alpha.1",
+      "version": "0.6.0-beta.1",
       "dependencies": {
         "com.vrchat.worlds": "~3.4.0",
         "dev.derpynewbie.common": "~0.3.4",
