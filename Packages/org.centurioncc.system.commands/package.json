@@ -1,6 +1,6 @@
 {
   "name": "org.centurioncc.system.commands",
-  "version": "0.6.0-beta.1",
+  "version": "0.6.0-beta.2",
   "displayName": "Centurion System Commands",
   "description": "Additional NewbieConsole commands module for Centurion System",
   "unity": "2019.4",
@@ -12,8 +12,7 @@
   "vpmDependencies": {
     "com.vrchat.worlds": ">=3.4.0",
     "dev.derpynewbie.common": "~0.3.4",
-    "dev.derpynewbie.logger": "~0.1.8",
-    "org.centurioncc.system": ">=0.6.0"
+    "dev.derpynewbie.logger": "~0.1.8"
   },
   "hideInEditor": false
 }
