@@ -15,7 +15,9 @@ namespace CenturionCC.System.Command
         private string customLabel;
 
         public override string Label => string.IsNullOrWhiteSpace(customLabel) ? name : customLabel;
-        public override string Description => "<command> <projectileCount|speed|drag|hopUp|trailTime|sync> [value]";
+        public override string Description =>
+            $"Edits ProjectileDataProvider data of {(targetDataStore != null ? targetDataStore.name : "NULL!!!")}";
+        public override string Usage => "<command> <projectileCount|speed|drag|hopUp|trailTime|sync> [value]";
 
         public override string OnCommand(NewbieConsole console, string label, string[] vars, ref string[] envVars)
         {
