@@ -66,6 +66,159 @@ namespace CenturionCC.System.Command
                                         "   debug [true|false]\n";
         public override string Description => "Perform player related manipulation such as add/remove etc.";
 
+        public override string OnCommand(NewbieConsole console, string label, string[] vars, ref string[] envVars)
+        {
+            if (vars == null || vars.Length == 0) return console.PrintUsage(this);
+
+            // ReSharper disable StringLiteralTypo
+            switch (vars[0].ToLower())
+            {
+                case "r":
+                case "reset":
+                    return SendAllRequest(console, OpReset, nameof(OpReset), true);
+                case "join":
+                case "a":
+                case "add":
+                    return SendPlayerRequest(console, vars, OpAdd, nameof(OpAdd), -1, true, false);
+                case "leave":
+                case "rm":
+                case "remove":
+                    return SendPlayerRequest(console, vars, OpRemove, nameof(OpRemove), -1, true, false);
+                case "addall":
+                    return SendAllRequest(console, OpAddAll, nameof(OpAddAll), true);
+                case "resetteam":
+                case "teamreset":
+                    return SendAllRequest(console, OpTeamReset, nameof(OpTeamReset), true);
+                case "s":
+                case "sync":
+                    return HandleRequestSync(console, vars);
+                case "syncall":
+                    return SendAllRequest(console, OpSyncAll, nameof(OpSyncAll), false);
+                case "st":
+                case "stats":
+                    return HandleStats(console, vars);
+                case "resetstats":
+                case "streset":
+                case "statsreset":
+                    return SendPlayerRequest(console, vars, OpStatsReset, nameof(OpStatsReset), -1, true, true);
+                case "resetstatsall":
+                case "stresetall":
+                case "statsresetall":
+                    return SendAllRequest(console, OpStatsResetAll, nameof(OpStatsResetAll), true);
+                case "t":
+                case "team":
+                case "changeteam":
+                    return HandleRequestTeamChange(console, vars);
+                case "sh":
+                case "shuffle":
+                case "shuffleteam":
+                    return HandleRequestTeamShuffle(console, vars);
+                case "tra":
+                case "regionadd":
+                case "teamregionadd":
+                    return HandleRequestTeamRegionAdd(console, vars);
+                case "ttag":
+                case "teamtag":
+                case "showteamtag":
+                    return SendBoolRequest(
+                        console, vars,
+                        OpTeamTagChange,
+                        nameof(OpTeamTagChange),
+                        "TeamTag",
+                        playerManager.ShowTeamTag,
+                        true
+                    );
+                case "stag":
+                case "stafftag":
+                case "showstafftag":
+                    return SendBoolRequest(
+                        console, vars,
+                        OpStaffTagChange,
+                        nameof(OpStaffTagChange),
+                        "StaffTag",
+                        playerManager.ShowStaffTag,
+                        true
+                    );
+                case "ctag":
+                case "creatortag":
+                case "showcreatortag":
+                    return SendBoolRequest(
+                        console, vars,
+                        OpCreatorTagChange,
+                        nameof(OpCreatorTagChange),
+                        "CreatorTag",
+                        playerManager.ShowCreatorTag,
+                        true
+                    );
+                case "ff":
+                case "friendlyfire":
+                case "allowfriendlyfire":
+                    if (vars.Length >= 2)
+                        return SendGenericRequest(console, OpFriendlyFireChange, nameof(OpFriendlyFireChange), -1,
+                            "All", ConsoleParser.TryParseBoolAsInt(vars[1], playerManager.AllowFriendlyFire), true);
+                    console.Println($"Allow Friendly Fire: {playerManager.AllowFriendlyFire}");
+                    return ConsoleLiteral.Of(playerManager.AllowFriendlyFire);
+                case "ffmode":
+                case "friendlyfiremode":
+                    if (vars.Length >= 2)
+                    {
+                        var mode = vars[1];
+                        var modeEnum = playerManager.FriendlyFireMode;
+                        switch (mode.ToLower())
+                        {
+                            case "always":
+                                modeEnum = FriendlyFireMode.Always;
+                                break;
+                            case "reverse":
+                                modeEnum = FriendlyFireMode.Reverse;
+                                break;
+                            case "both":
+                                modeEnum = FriendlyFireMode.Both;
+                                break;
+                            case "warning":
+                                modeEnum = FriendlyFireMode.Warning;
+                                break;
+                            case "never":
+                                modeEnum = FriendlyFireMode.Never;
+                                break;
+                            default:
+                                console.Println("could not parse friendly fire mode enum");
+                                return ConsoleLiteral.Of(false);
+                        }
+
+                        return SendGenericRequest(console, OpFriendlyFireModeChange, nameof(OpFriendlyFireModeChange),
+                            -1, modeEnum.ToEnumName(), (int)modeEnum, true);
+                    }
+
+                    var ffModeString = playerManager.FriendlyFireMode.ToEnumName();
+                    console.Println(ffModeString);
+                    return ffModeString;
+                case "u":
+                case "update":
+                    return HandleUpdate(console);
+                case "lp":
+                case "localplayer":
+                    return HandleLocalPlayer(console);
+                case "l":
+                case "list":
+                    return HandleList(console, vars);
+                case "d":
+                case "debug":
+                    return HandleDebug(console, label, vars);
+                case "c":
+                case "collider":
+                    return HandleCollider(console, vars);
+                default:
+                    return console.PrintUsage(this);
+            }
+            // ReSharper restore StringLiteralTypo
+        }
+
+        public override void OnRegistered(NewbieConsole console)
+        {
+            _console = console;
+        }
+
         public override void OnPreSerialization()
         {
             ProcessReceivedData();
@@ -352,48 +505,7 @@ namespace CenturionCC.System.Command
             }
         }
 
-        private string HandleLocalPlayer(NewbieConsole console)
-        {
-            var hasLocal = playerManager.HasLocalPlayer();
-            var player = playerManager.GetLocalPlayer();
-            var playerName =
-                player != null ? NewbieUtils.GetPlayerName(player.VrcPlayer) : NewbieUtils.GetPlayerName(null);
-            var index = playerManager.GetLocalPlayerIndex();
-
-            console.Println(
-                $"You are <color=green>{(hasLocal ? "in" : "not in")}</color> " +
-                $"game with index of <color=green>{index}</color>, " +
-                $"which is <color=green>{playerName}</color>!");
-            return ConsoleLiteral.Of(hasLocal);
-        }
-
-        private string HandleDebug(NewbieConsole console, string label, string[] arguments)
-        {
-            if (arguments != null && arguments.Length >= 2)
-            {
-                var request = ConsoleParser.TryParseBoolean(arguments[1], playerManager.IsDebug);
-                playerManager.IsDebug = request;
-                if (request)
-                    console.Println(
-                        "<color=red>Warning: You must not enable this feature if you're currently playing.</color>\n" +
-                        $"<color=red>   To disable this, simply type '{label} debug false' in console.</color>\n" +
-                        "<color=red>警告: プレイ中はこの機能を有効化しないでください</color>\n" +
-                        $"<color=red>    無効化するには '{label} debug false' と入力してください</color>\n");
-            }
-
-            console.Println($"IsPMDebug: {playerManager.IsDebug}");
-            return ConsoleLiteral.Of(playerManager.IsDebug);
-        }
-
-        private string HandleUpdate(NewbieConsole console)
-        {
-            playerManager.UpdateLocalPlayer();
-            playerManager.UpdateAllPlayerView();
-
-            console.Println(
-                "<color=green>Successfully </color><color=orange>updated</color><color=green> local player</color>");
-            return ConsoleLiteral.GetNone();
-        }
+        #region SendGeneric
 
         private string SendGenericRequest(NewbieConsole console,
             int targetOp, string targetOpName,
@@ -458,6 +570,84 @@ namespace CenturionCC.System.Command
                 -1, "All",
                 -1, requireMod
             );
+        }
+
+        private string SendBoolRequest(
+            NewbieConsole console,
+            string[] arguments,
+            int targetOp, string targetOpName, string targetName,
+            bool currentState, bool requireMod)
+        {
+            var hasValue = arguments.Length >= 2;
+            if (!hasValue)
+            {
+                console.Println($"{targetName}: {currentState}");
+                return ConsoleLiteral.Of(currentState);
+            }
+
+            if (!console.CurrentRole.HasPermission() && requireMod)
+            {
+                console.Println($"You are not allowed to change {targetName} unless you're moderator!");
+                return ConsoleLiteral.GetNone();
+            }
+
+            var target = ConsoleParser.TryParseBoolean(arguments[1], currentState) ? 1 : 0;
+            return SendGenericRequest(
+                console,
+                targetOp,
+                targetOpName,
+                -1,
+                $"{targetName} to {target}",
+                target,
+                requireMod
+            );
+        }
+
+        #endregion
+
+        #region SubcommandHandler
+
+        private string HandleLocalPlayer(NewbieConsole console)
+        {
+            var hasLocal = playerManager.HasLocalPlayer();
+            var player = playerManager.GetLocalPlayer();
+            var playerName =
+                player != null ? NewbieUtils.GetPlayerName(player.VrcPlayer) : NewbieUtils.GetPlayerName(null);
+            var index = playerManager.GetLocalPlayerIndex();
+
+            console.Println(
+                $"You are <color=green>{(hasLocal ? "in" : "not in")}</color> " +
+                $"game with index of <color=green>{index}</color>, " +
+                $"which is <color=green>{playerName}</color>!");
+            return ConsoleLiteral.Of(hasLocal);
+        }
+
+        private string HandleDebug(NewbieConsole console, string label, string[] arguments)
+        {
+            if (arguments != null && arguments.Length >= 2)
+            {
+                var request = ConsoleParser.TryParseBoolean(arguments[1], playerManager.IsDebug);
+                playerManager.IsDebug = request;
+                if (request)
+                    console.Println(
+                        "<color=red>Warning: You must not enable this feature if you're currently playing.</color>\n" +
+                        $"<color=red>   To disable this, simply type '{label} debug false' in console.</color>\n" +
+                        "<color=red>警告: プレイ中はこの機能を有効化しないでください</color>\n" +
+                        $"<color=red>    無効化するには '{label} debug false' と入力してください</color>\n");
+            }
+
+            console.Println($"IsPMDebug: {playerManager.IsDebug}");
+            return ConsoleLiteral.Of(playerManager.IsDebug);
+        }
+
+        private string HandleUpdate(NewbieConsole console)
+        {
+            playerManager.UpdateLocalPlayer();
+            playerManager.UpdateAllPlayerView();
+
+            console.Println(
+                "<color=green>Successfully </color><color=orange>updated</color><color=green> local player</color>");
+            return ConsoleLiteral.GetNone();
         }
 
         private string HandleRequestSync(NewbieConsole console, string[] arguments)
@@ -533,7 +723,7 @@ namespace CenturionCC.System.Command
             return SendGenericRequest(
                 console,
                 OpTeamShuffle, nameof(OpTeamShuffle),
-                _targetPlayerId = -1,
+                -1,
                 $"All({shuffleMode}){(_IsBitSet(shuffleMode, 1) ? " +include_moderators" : "")}{(_IsBitSet(shuffleMode, 2) ? " +include_greenAndBlue" : "")}",
                 shuffleMode,
                 true
@@ -555,7 +745,6 @@ namespace CenturionCC.System.Command
                 return ConsoleLiteral.Of(false);
             }
 
-            _targetOperation = OpTeamRegionChange;
             var regionId = ConsoleParser.TryParseInt(arguments[1]);
             var targetTeamId = ConsoleParser.TryParseInt(arguments[2]);
 
@@ -573,75 +762,6 @@ namespace CenturionCC.System.Command
                 $"All inside region id of {regionId} to team id of {targetTeamId}",
                 targetTeamId,
                 true
-            );
-        }
-
-        private string HandleRequestShowTeamTag(NewbieConsole console, string[] arguments)
-        {
-            if (!console.CurrentRole.HasPermission())
-            {
-                console.Println("You are not allowed to change team tag on/off unless you're moderator!");
-                return ConsoleLiteral.Of(false);
-            }
-
-            if (arguments.Length <= 1)
-            {
-                console.Println("<color=red>On/Off not specified</color>");
-                return ConsoleLiteral.Of(false);
-            }
-
-            return SendGenericRequest
-            (
-                console,
-                OpTeamTagChange, nameof(OpTeamTagChange),
-                -1, $"All to {(ConsoleParser.TryParseBoolean(arguments[1], playerManager.ShowTeamTag) ? 1 : 0)}",
-                _targetTeam = ConsoleParser.TryParseBoolean(arguments[1], playerManager.ShowTeamTag) ? 1 : 0, true
-            );
-        }
-
-        private string HandleRequestShowStaffTag(NewbieConsole console, string[] arguments)
-        {
-            if (!console.CurrentRole.HasPermission())
-            {
-                console.Println("You are not allowed to change staff tag on/off unless you're moderator!");
-                return ConsoleLiteral.Of(false);
-            }
-
-            if (arguments.Length <= 1)
-            {
-                console.Println("<color=red>On/Off not specified</color>");
-                return ConsoleLiteral.Of(false);
-            }
-
-            return SendGenericRequest
-            (
-                console,
-                OpStaffTagChange, nameof(OpStaffTagChange),
-                -1, $"All to {(ConsoleParser.TryParseBoolean(arguments[1], playerManager.ShowStaffTag) ? 1 : 0)}",
-                _targetTeam = ConsoleParser.TryParseBoolean(arguments[1], playerManager.ShowStaffTag) ? 1 : 0, true
-            );
-        }
-
-        private string HandleRequestShowCreatorTag(NewbieConsole console, string[] arguments)
-        {
-            if (!console.CurrentRole.HasPermission())
-            {
-                console.Println("You are not allowed to change creator tag on/off unless you're moderator!");
-                return ConsoleLiteral.Of(false);
-            }
-
-            if (arguments.Length <= 1)
-            {
-                console.Println("<color=red>On/Off not specified</color>");
-                return ConsoleLiteral.Of(false);
-            }
-
-            return SendGenericRequest
-            (
-                console,
-                OpCreatorTagChange, nameof(OpCreatorTagChange),
-                -1, $"All to {(ConsoleParser.TryParseBoolean(arguments[1], playerManager.ShowCreatorTag) ? 1 : 0)}",
-                _targetTeam = ConsoleParser.TryParseBoolean(arguments[1], playerManager.ShowCreatorTag) ? 1 : 0, true
             );
         }
 
@@ -780,6 +900,10 @@ namespace CenturionCC.System.Command
                    $"{playerManager.AlwaysUseLightweightCollider}";
         }
 
+        #endregion
+
+        #region StaticMethod
+
         private static string ColStatusToString(int status)
         {
             return status == 0 ? "false" : status == 1 ? "true" : "invalid";
@@ -853,134 +977,7 @@ namespace CenturionCC.System.Command
             return ((n >> (p - 1)) & 1) == 1;
         }
 
-        public override string OnCommand(NewbieConsole console, string label, string[] vars, ref string[] envVars)
-        {
-            if (vars == null || vars.Length == 0) return console.PrintUsage(this);
-
-            // ReSharper disable StringLiteralTypo
-            switch (vars[0].ToLower())
-            {
-                case "r":
-                case "reset":
-                    return SendAllRequest(console, OpReset, nameof(OpReset), true);
-                case "join":
-                case "a":
-                case "add":
-                    return SendPlayerRequest(console, vars, OpAdd, nameof(OpAdd), -1, true, false);
-                case "leave":
-                case "rm":
-                case "remove":
-                    return SendPlayerRequest(console, vars, OpRemove, nameof(OpRemove), -1, true, false);
-                case "addall":
-                    return SendAllRequest(console, OpAddAll, nameof(OpAddAll), true);
-                case "teamreset":
-                    return SendAllRequest(console, OpTeamReset, nameof(OpTeamReset), true);
-                case "s":
-                case "sync":
-                    return HandleRequestSync(console, vars);
-                case "syncall":
-                    return SendAllRequest(console, OpSyncAll, nameof(OpSyncAll), false);
-                case "st":
-                case "stats":
-                    return HandleStats(console, vars);
-                case "streset":
-                case "statsreset":
-                    return SendPlayerRequest(console, vars, OpStatsReset, nameof(OpStatsReset), -1, true, true);
-                case "stresetall":
-                case "statsresetall":
-                    return SendAllRequest(console, OpStatsResetAll, nameof(OpStatsResetAll), true);
-                case "t":
-                case "team":
-                case "changeteam":
-                    return HandleRequestTeamChange(console, vars);
-                case "sh":
-                case "shuffle":
-                case "shuffleteam":
-                    return HandleRequestTeamShuffle(console, vars);
-                case "tra":
-                case "regionadd":
-                case "teamregionadd":
-                    return HandleRequestTeamRegionAdd(console, vars);
-                case "ttag":
-                case "teamtag":
-                case "showteamtag":
-                    return HandleRequestShowTeamTag(console, vars);
-                case "stag":
-                case "stafftag":
-                case "showstafftag":
-                    return HandleRequestShowStaffTag(console, vars);
-                case "ctag":
-                case "creatortag":
-                case "showcreatortag":
-                    return HandleRequestShowCreatorTag(console, vars);
-                case "ff":
-                case "friendlyfire":
-                case "allowfriendlyfire":
-                    if (vars.Length >= 2)
-                        return SendGenericRequest(console, OpFriendlyFireChange, nameof(OpFriendlyFireChange), -1,
-                            "All", ConsoleParser.TryParseBoolAsInt(vars[1], playerManager.AllowFriendlyFire), true);
-                    console.Println($"Allow Friendly Fire: {playerManager.AllowFriendlyFire}");
-                    return ConsoleLiteral.Of(playerManager.AllowFriendlyFire);
-                case "ffmode":
-                case "friendlyfiremode":
-                    if (vars.Length >= 2)
-                    {
-                        var mode = vars[1];
-                        var modeEnum = playerManager.FriendlyFireMode;
-                        switch (mode.ToLower())
-                        {
-                            case "always":
-                                modeEnum = FriendlyFireMode.Always;
-                                break;
-                            case "reverse":
-                                modeEnum = FriendlyFireMode.Reverse;
-                                break;
-                            case "both":
-                                modeEnum = FriendlyFireMode.Both;
-                                break;
-                            case "warning":
-                                modeEnum = FriendlyFireMode.Warning;
-                                break;
-                            case "never":
-                                modeEnum = FriendlyFireMode.Never;
-                                break;
-                            default:
-                                console.Println("could not parse friendly fire mode enum");
-                                return ConsoleLiteral.Of(false);
-                        }
-
-                        return SendGenericRequest(console, OpFriendlyFireModeChange, nameof(OpFriendlyFireModeChange),
-                            -1, modeEnum.ToEnumName(), (int)modeEnum, true);
-                    }
-
-                    var ffModeString = playerManager.FriendlyFireMode.ToEnumName();
-                    console.Println(ffModeString);
-                    return ffModeString;
-                case "u":
-                case "update":
-                    return HandleUpdate(console);
-                case "lp":
-                case "localplayer":
-                    return HandleLocalPlayer(console);
-                case "l":
-                case "list":
-                    return HandleList(console, vars);
-                case "d":
-                case "debug":
-                    return HandleDebug(console, label, vars);
-                case "c":
-                case "collider":
-                    return HandleCollider(console, vars);
-                default:
-                    return console.PrintUsage(this);
-            }
-            // ReSharper restore StringLiteralTypo
-        }
-
-        public override void OnRegistered(NewbieConsole console)
-        {
-            _console = console;
-        }
+        #endregion
 
         #region TeamTeleportationLogics
 
