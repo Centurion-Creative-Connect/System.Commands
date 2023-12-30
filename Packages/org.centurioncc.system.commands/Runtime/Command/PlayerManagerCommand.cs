@@ -86,6 +86,7 @@ namespace CenturionCC.System.Command
                     return SendPlayerRequest(console, vars, OpRemove, nameof(OpRemove), -1, true, false);
                 case "addall":
                     return SendAllRequest(console, OpAddAll, nameof(OpAddAll), true);
+                case "resetteam":
                 case "teamreset":
                     return SendAllRequest(console, OpTeamReset, nameof(OpTeamReset), true);
                 case "s":
@@ -96,9 +97,11 @@ namespace CenturionCC.System.Command
                 case "st":
                 case "stats":
                     return HandleStats(console, vars);
+                case "resetstats":
                 case "streset":
                 case "statsreset":
                     return SendPlayerRequest(console, vars, OpStatsReset, nameof(OpStatsReset), -1, true, true);
+                case "resetstatsall":
                 case "stresetall":
                 case "statsresetall":
                     return SendAllRequest(console, OpStatsResetAll, nameof(OpStatsResetAll), true);
