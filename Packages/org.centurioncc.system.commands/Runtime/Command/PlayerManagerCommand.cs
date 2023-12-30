@@ -578,7 +578,7 @@ namespace CenturionCC.System.Command
             int targetOp, string targetOpName, string targetName,
             bool currentState, bool requireMod)
         {
-            var hasValue = arguments.Length <= 2;
+            var hasValue = arguments.Length >= 2;
             if (!hasValue)
             {
                 console.Println($"{targetName}: {currentState}");
