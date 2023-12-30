@@ -564,7 +564,7 @@ namespace CenturionCC.System.Command
             return SendGenericRequest(
                 console,
                 OpTeamShuffle, nameof(OpTeamShuffle),
-                _targetPlayerId = -1,
+                -1,
                 $"All({shuffleMode}){(_IsBitSet(shuffleMode, 1) ? " +include_moderators" : "")}{(_IsBitSet(shuffleMode, 2) ? " +include_greenAndBlue" : "")}",
                 shuffleMode,
                 true
@@ -586,7 +586,6 @@ namespace CenturionCC.System.Command
                 return ConsoleLiteral.Of(false);
             }
 
-            _targetOperation = OpTeamRegionChange;
             var regionId = ConsoleParser.TryParseInt(arguments[1]);
             var targetTeamId = ConsoleParser.TryParseInt(arguments[2]);
 
