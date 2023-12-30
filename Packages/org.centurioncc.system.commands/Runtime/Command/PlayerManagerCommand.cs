@@ -508,8 +508,8 @@ namespace CenturionCC.System.Command
                 OpTeamChange,
                 nameof(OpTeamChange),
                 targetPlayer.playerId,
-                $"{NewbieUtils.GetPlayerName(targetPlayer)} to {_targetTeam}",
-                _targetTeam,
+                $"{NewbieUtils.GetPlayerName(targetPlayer)} to {targetTeam}",
+                targetTeam,
                 false
             );
         }
