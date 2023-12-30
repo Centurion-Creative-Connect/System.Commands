@@ -460,6 +460,37 @@ namespace CenturionCC.System.Command
             );
         }
 
+        private string HandleBoolCommand(
+            NewbieConsole console,
+            string[] arguments,
+            int targetOp, string targetOpName, string targetName,
+            bool currentState, bool requireMod)
+        {
+            var hasValue = arguments.Length <= 2;
+            if (!hasValue)
+            {
+                console.Println($"{targetName}: {currentState}");
+                return ConsoleLiteral.Of(currentState);
+            }
+
+            if (!console.CurrentRole.HasPermission() && requireMod)
+            {
+                console.Println($"You are not allowed to change {targetName} unless you're moderator!");
+                return ConsoleLiteral.GetNone();
+            }
+
+            var target = ConsoleParser.TryParseBoolean(arguments[1], currentState) ? 1 : 0;
+            return SendGenericRequest(
+                console,
+                targetOp,
+                targetOpName,
+                -1,
+                $"{targetName} to {target}",
+                target,
+                requireMod
+            );
+        }
+
         private string HandleRequestSync(NewbieConsole console, string[] arguments)
         {
             if (arguments == null || arguments.Length < 2)
@@ -573,75 +604,6 @@ namespace CenturionCC.System.Command
                 $"All inside region id of {regionId} to team id of {targetTeamId}",
                 targetTeamId,
                 true
-            );
-        }
-
-        private string HandleRequestShowTeamTag(NewbieConsole console, string[] arguments)
-        {
-            if (!console.CurrentRole.HasPermission())
-            {
-                console.Println("You are not allowed to change team tag on/off unless you're moderator!");
-                return ConsoleLiteral.Of(false);
-            }
-
-            if (arguments.Length <= 1)
-            {
-                console.Println("<color=red>On/Off not specified</color>");
-                return ConsoleLiteral.Of(false);
-            }
-
-            return SendGenericRequest
-            (
-                console,
-                OpTeamTagChange, nameof(OpTeamTagChange),
-                -1, $"All to {(ConsoleParser.TryParseBoolean(arguments[1], playerManager.ShowTeamTag) ? 1 : 0)}",
-                _targetTeam = ConsoleParser.TryParseBoolean(arguments[1], playerManager.ShowTeamTag) ? 1 : 0, true
-            );
-        }
-
-        private string HandleRequestShowStaffTag(NewbieConsole console, string[] arguments)
-        {
-            if (!console.CurrentRole.HasPermission())
-            {
-                console.Println("You are not allowed to change staff tag on/off unless you're moderator!");
-                return ConsoleLiteral.Of(false);
-            }
-
-            if (arguments.Length <= 1)
-            {
-                console.Println("<color=red>On/Off not specified</color>");
-                return ConsoleLiteral.Of(false);
-            }
-
-            return SendGenericRequest
-            (
-                console,
-                OpStaffTagChange, nameof(OpStaffTagChange),
-                -1, $"All to {(ConsoleParser.TryParseBoolean(arguments[1], playerManager.ShowStaffTag) ? 1 : 0)}",
-                _targetTeam = ConsoleParser.TryParseBoolean(arguments[1], playerManager.ShowStaffTag) ? 1 : 0, true
-            );
-        }
-
-        private string HandleRequestShowCreatorTag(NewbieConsole console, string[] arguments)
-        {
-            if (!console.CurrentRole.HasPermission())
-            {
-                console.Println("You are not allowed to change creator tag on/off unless you're moderator!");
-                return ConsoleLiteral.Of(false);
-            }
-
-            if (arguments.Length <= 1)
-            {
-                console.Println("<color=red>On/Off not specified</color>");
-                return ConsoleLiteral.Of(false);
-            }
-
-            return SendGenericRequest
-            (
-                console,
-                OpCreatorTagChange, nameof(OpCreatorTagChange),
-                -1, $"All to {(ConsoleParser.TryParseBoolean(arguments[1], playerManager.ShowCreatorTag) ? 1 : 0)}",
-                _targetTeam = ConsoleParser.TryParseBoolean(arguments[1], playerManager.ShowCreatorTag) ? 1 : 0, true
             );
         }
 
@@ -904,15 +866,36 @@ namespace CenturionCC.System.Command
                 case "ttag":
                 case "teamtag":
                 case "showteamtag":
-                    return HandleRequestShowTeamTag(console, vars);
+                    return HandleBoolCommand(
+                        console, vars,
+                        OpTeamTagChange,
+                        nameof(OpTeamTagChange),
+                        "TeamTag",
+                        playerManager.ShowTeamTag,
+                        true
+                    );
                 case "stag":
                 case "stafftag":
                 case "showstafftag":
-                    return HandleRequestShowStaffTag(console, vars);
+                    return HandleBoolCommand(
+                        console, vars,
+                        OpStaffTagChange,
+                        nameof(OpStaffTagChange),
+                        "StaffTag",
+                        playerManager.ShowStaffTag,
+                        true
+                    );
                 case "ctag":
                 case "creatortag":
                 case "showcreatortag":
-                    return HandleRequestShowCreatorTag(console, vars);
+                    return HandleBoolCommand(
+                        console, vars,
+                        OpCreatorTagChange,
+                        nameof(OpCreatorTagChange),
+                        "CreatorTag",
+                        playerManager.ShowCreatorTag,
+                        true
+                    );
                 case "ff":
                 case "friendlyfire":
                 case "allowfriendlyfire":
