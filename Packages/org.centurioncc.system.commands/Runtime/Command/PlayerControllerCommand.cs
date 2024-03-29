@@ -15,7 +15,7 @@ namespace CenturionCC.System.Command
         public override string Label => "PlayerController";
         public override string[] Aliases => new[] { "PC" };
         public override string Usage =>
-            "<command> <walk|run|strafe|jump|gravity|maxWeight|useGunDir|gunDirUp|gunDirLow|groundSnap|groundSnapDistance|groundSnapForward> [value] OR <command> <info>";
+            "<command> <walk|run|strafe|jump|gravity|maxWeight|useGunDir|gunDirUp|gunDirLow|groundSnap|groundSnapDistance|groundSnapForward|combatTag> [value] OR <command> <info>";
         public override string Description => "Adjust PlayerControllers properties in runtime.";
 
         public override void OnActionCommand(NewbieConsole console, string label, ref string[] vars,
@@ -43,6 +43,7 @@ namespace CenturionCC.System.Command
                 case "gundirlow":
                 case "groundsnapdistance":
                 case "groundsnapforward":
+                case "combattag":
                 {
                     OnFloatSetSubCommand(console, subLabel, hasValue, vars);
                     return;
@@ -90,7 +91,7 @@ namespace CenturionCC.System.Command
                         $"  CanRun         : {pc.CanRun}\n" +
                         $"  CheckGunDir    : {pc.checkGunDirectionToAllowRunning}\n" +
                         $"  GunDirUpperBnd : {pc.gunDirectionUpperBound}\n" +
-                        $"  GunDirLowerBnd : {pc.gunDirectionLowerBound}\n" +
+                        $"  CombatTag      : {pc.combatTagTime}\n" +
                         $"  SnapPlToGndOnSl: {pc.snapPlayerToGroundOnSlopes}" +
                         $"  MaxCarryWeight : {pc.maximumCarryingWeightInKilogram}\n" +
                         $"  PlayerWeight   : {pc.PlayerWeight}\n" +
@@ -147,10 +148,10 @@ namespace CenturionCC.System.Command
                         pc.gunDirectionUpperBound = value;
                     console.Println($"Gun Direction Upper Bound: {pc.gunDirectionUpperBound}");
                     return;
-                case "gundirlow":
+                case "combattag":
                     if (hasValue)
-                        pc.gunDirectionLowerBound = value;
-                    console.Println($"Gun Direction Lower Bound: {pc.gunDirectionLowerBound}");
+                        pc.combatTagTime = value;
+                    console.Println($"Combat tag time: {pc.combatTagTime}");
                     return;
                 case "groundsnapdistance":
                     if (hasValue)
