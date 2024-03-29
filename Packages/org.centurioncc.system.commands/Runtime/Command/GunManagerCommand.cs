@@ -343,7 +343,8 @@ namespace CenturionCC.System.Command
                             out var torque,
                             out var drag,
                             out var trailDuration,
-                            out var trailCol);
+                            out var trailCol,
+                            out var lifeTime);
 
                         result +=
                             "\nProjectileData:\n" +
@@ -353,7 +354,8 @@ namespace CenturionCC.System.Command
                             $"  POf: {positionOffset.ToString("F2")}\n" +
                             $"  ROf: {rotOffset.eulerAngles.ToString("F2")}\n" +
                             $"  tDr: {trailDuration}\n" +
-                            $"  tCl: {trailCol.Evaluate(0).ToString()}";
+                            $"  tCl: {trailCol.Evaluate(0).ToString()}" +
+                            $"  lt : {lifeTime:F2}";
                     }
 
                     console.Println(result);
