@@ -13,7 +13,7 @@ namespace CenturionCC.System.Command
         private PlayerUpdater updater;
 
         public override string Label => "PlayerUpdater";
-        public override string Usage => "<command> <list|maxSortStep> [value]";
+        public override string Usage => "<command> <list|maxSortStep|count> [value]";
 
         public override string OnCommand(NewbieConsole console, string label, string[] vars,
             ref string[] envVars)
@@ -26,10 +26,12 @@ namespace CenturionCC.System.Command
 
             switch (vars[0].ToLower())
             {
+                case "l":
                 case "list":
                     var listStr = updater.GetOrder();
                     console.Print(listStr);
                     return listStr;
+                case "m":
                 case "maxsortstep":
                     if (vars.Length > 1)
                     {
@@ -43,8 +45,24 @@ namespace CenturionCC.System.Command
                         updater.sortStepCount = i;
                     }
 
-                    console.Println($"Max Sort Step: {updater.sortStepCount}");
+                    console.Println($"{updater.sortStepCount}");
                     return ConsoleLiteral.Of(updater.sortStepCount);
+                case "c":
+                case "count":
+                    if (vars.Length > 1)
+                    {
+                        var i = ConsoleParser.TryParseInt(vars[1]);
+                        if (i < 1 || i > updater.ModelCount - 1)
+                        {
+                            console.Println($"{i} exceeds capable range of 1 to {updater.ModelCount - 1}!");
+                            return ConsoleLiteral.GetNone();
+                        }
+
+                        updater.ViewCount = i;
+                    }
+
+                    console.Println($"{updater.ViewCount}");
+                    return ConsoleLiteral.Of(updater.ViewCount);
                 default:
                     console.PrintUsage(this);
                     return ConsoleLiteral.GetNone();
