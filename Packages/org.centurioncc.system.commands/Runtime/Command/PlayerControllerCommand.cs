@@ -13,9 +13,29 @@ namespace CenturionCC.System.Command
         private PlayerController pc;
 
         public override string Label => "PlayerController";
+
         public override string[] Aliases => new[] { "PC" };
+
         public override string Usage =>
-            "<command> <walk|run|strafe|jump|gravity|maxWeight|useGunDir|gunDirUp|gunDirLow|groundSnap|groundSnapDistance|groundSnapForward|combatTag> [value] OR <command> <info>";
+            "<command>\n" +
+            "  walk [float]\n" +
+            "  run [float]\n" +
+            "  strafe [float]\n" +
+            "  jump [float]\n" +
+            "  gravity [float]\n" +
+            "  maxWeight [float]\n" +
+            "  groundSnap [bool]\n" +
+            "  groundSnapDistance [float]\n" +
+            "  groundSnapForward [float]\n" +
+            "  useGunSprint [bool]\n" +
+            "  gunSprintThreshold [float]\n" +
+            "  gunSprintRun [float]\n" +
+            "  gunSprintWalk [float]\n" +
+            "  useCombatTag [bool]\n" +
+            "  combatTagTime [float]\n" +
+            "  combatTagSpeed [float]\n" +
+            "  info\n";
+
         public override string Description => "Adjust PlayerControllers properties in runtime.";
 
         public override void OnActionCommand(NewbieConsole console, string label, ref string[] vars,
@@ -39,35 +59,33 @@ namespace CenturionCC.System.Command
                 case "jump":
                 case "gravity":
                 case "maxweight":
+                case "gunsprintdirectionthreshold": // proper
+                case "gunsprintthreshold":
+                case "dirthreshold":
                 case "gundirup":
-                case "gundirlow":
+                case "gunsprintrunspeed": // proper
+                case "gunsprintrun":
+                case "gunsprintwalkspeed": // proper
+                case "gunsprintwalk":
+                case "groundsnapmaxdistance": // proper
                 case "groundsnapdistance":
+                case "groundsnapforwarddistance": // proper
                 case "groundsnapforward":
-                case "combattag":
+                case "combattagspeedmultiplier": // proper
+                case "combattagspeed":
+                case "combattagspdmul":
+                case "combattagtime": // proper
                 {
                     OnFloatSetSubCommand(console, subLabel, hasValue, vars);
                     return;
                 }
+                case "usecombattag":
+                case "gunsprint":
+                case "usegunsprint":
                 case "usegundir":
-                {
-                    if (hasValue)
-                    {
-                        var value = ConsoleParser.TryParseBoolean(vars[1], pc.checkGunDirectionToAllowRunning);
-                        pc.checkGunDirectionToAllowRunning = value;
-                    }
-
-                    console.Println($"Check Gun Direction to Allow Running: {pc.checkGunDirectionToAllowRunning}");
-                    return;
-                }
                 case "groundsnap":
                 {
-                    if (hasValue)
-                    {
-                        var value = ConsoleParser.TryParseBoolean(vars[1], pc.snapPlayerToGroundOnSlopes);
-                        pc.snapPlayerToGroundOnSlopes = value;
-                    }
-
-                    console.Println($"Snap Player To Ground On Slopes: {pc.snapPlayerToGroundOnSlopes}");
+                    OnBoolSetSubCommand(console, subLabel, hasValue, vars);
                     return;
                 }
                 // ReSharper restore StringLiteralTypo
@@ -89,14 +107,28 @@ namespace CenturionCC.System.Command
                     console.Println(
                         "Internal Params:\n" +
                         $"  CanRun         : {pc.CanRun}\n" +
-                        $"  CheckGunDir    : {pc.checkGunDirectionToAllowRunning}\n" +
-                        $"  GunDirUpperBnd : {pc.gunDirectionUpperBound}\n" +
-                        $"  CombatTag      : {pc.combatTagTime}\n" +
-                        $"  SnapPlToGndOnSl: {pc.snapPlayerToGroundOnSlopes}" +
+                        $"  SnapPlToGndOnSl: {pc.snapPlayerToGroundOnSlopes}\n" +
                         $"  MaxCarryWeight : {pc.maximumCarryingWeightInKilogram}\n" +
                         $"  PlayerWeight   : {pc.PlayerWeight}\n" +
                         $"  EnvMultiplier  : {pc.EnvironmentEffectMultiplier}\n" +
-                        $"  TotalMultiplier: {pc.TotalMultiplier}\n");
+                        $"  TotalMultiplier: {pc.TotalMultiplier}\n" +
+                        $"Gun Integration Params:\n" +
+                        $"Base:\n" +
+                        $"  UseGunSprint   : {pc.BaseUseGunSprint}\n" +
+                        $"  GunSprintRun   : {pc.BaseGunSprintRunSpeed}\n" +
+                        $"  GunSprintWalk  : {pc.BaseGunSprintWalkSpeed}\n" +
+                        $"  DirThreshold   : {pc.BaseGunSprintDirectionThreshold}\n" +
+                        $"  UseCombatTag   : {pc.BaseUseCombatTag}\n" +
+                        $"  CombatTagTime  : {pc.BaseCombatTagTime}\n" +
+                        $"  CombatTagSpdMul: {pc.BaseCombatTagSpeedMultiplier}\n" +
+                        $"Actual:\n" +
+                        $"  UseGunSprint   : {pc.ActualUseGunSprint}\n" +
+                        $"  GunSprintRun   : {pc.ActualGunSprintRunSpeed}\n" +
+                        $"  GunSprintWalk  : {pc.ActualGunSprintWalkSpeed}\n" +
+                        $"  DirThreshold   : {pc.ActualGunSprintDirectionThreshold}\n" +
+                        $"  UseCombatTag   : {pc.ActualUseCombatTag}\n" +
+                        $"  CombatTagTime  : {pc.ActualCombatTagTime}\n" +
+                        $"  CombatTagSpdMul: {pc.ActualCombatTagSpeedMultiplier}");
                     return;
                 default:
                     console.PrintUsage(this);
@@ -143,26 +175,95 @@ namespace CenturionCC.System.Command
                         pc.maximumCarryingWeightInKilogram = value;
                     console.Println($"Maximum Carrying Weight: {pc.maximumCarryingWeightInKilogram}");
                     return;
+                case "gunsprintdirectionthreshold":
+                case "gunsprintthreshold":
+                case "dirthreshold":
                 case "gundirup":
                     if (hasValue)
-                        pc.gunDirectionUpperBound = value;
-                    console.Println($"Gun Direction Upper Bound: {pc.gunDirectionUpperBound}");
+                        pc.BaseGunSprintDirectionThreshold = value;
+                    console.Println($"Base Gun Sprint Direction Threshold: {pc.BaseGunSprintDirectionThreshold}");
                     return;
-                case "combattag":
+                case "gunsprintrunspeed":
+                case "gunsprintrun":
                     if (hasValue)
-                        pc.combatTagTime = value;
-                    console.Println($"Combat tag time: {pc.combatTagTime}");
+                        pc.BaseGunSprintRunSpeed = value;
+                    console.Println($"Base Gun Sprint Run Speed: {pc.BaseGunSprintRunSpeed}");
                     return;
+                case "gunsprintwalkspeed":
+                case "gunsprintwalk":
+                    if (hasValue)
+                        pc.BaseGunSprintWalkSpeed = value;
+                    console.Println($"Base Gun Sprint Walk Speed: {pc.BaseGunSprintWalkSpeed}");
+                    return;
+                case "combattagtime":
+                    if (hasValue)
+                        pc.BaseCombatTagTime = value;
+                    console.Println($"Base Combat Tag Time: {pc.BaseCombatTagTime}");
+                    return;
+                case "combattagspeedmultiplier":
+                case "combattagspeed":
+                case "combattagspdmul":
+                    if (hasValue)
+                        pc.BaseCombatTagSpeedMultiplier = value;
+                    console.Println($"Base Combat Tag Speed Multiplier: {pc.BaseCombatTagSpeedMultiplier}");
+                    return;
+                case "groundsnapmaxdistance":
                 case "groundsnapdistance":
                     if (hasValue)
                         pc.groundSnapMaxDistance = value;
                     console.Println($"Ground Snap Max Distance: {pc.groundSnapMaxDistance}");
                     return;
+                case "groundsnapforwarddistance":
                 case "groundsnapforward":
                     if (hasValue)
                         pc.groundSnapForwardDistance = value;
-                    console.Println($"Ground Snap Forward: {pc.groundSnapForwardDistance}");
+                    console.Println($"Ground Snap Forward Distance: {pc.groundSnapForwardDistance}");
                     return;
+                default:
+                    console.Println($"Unknown subcommand: {subLabel}");
+                    return;
+            }
+        }
+
+        private void OnBoolSetSubCommand(NewbieConsole console, string subLabel, bool hasValue, string[] vars)
+        {
+            switch (subLabel)
+            {
+                case "usecombattag":
+                {
+                    if (hasValue)
+                    {
+                        var value = ConsoleParser.TryParseBoolean(vars[1], pc.BaseUseCombatTag);
+                        pc.BaseUseCombatTag = value;
+                    }
+
+                    console.Println($"Base Use Combat Tag: {pc.BaseUseCombatTag}");
+                    return;
+                }
+                case "gunsprint":
+                case "usegunsprint":
+                case "usegundir":
+                {
+                    if (hasValue)
+                    {
+                        var value = ConsoleParser.TryParseBoolean(vars[1], pc.BaseUseGunSprint);
+                        pc.BaseUseGunSprint = value;
+                    }
+
+                    console.Println($"Base Use Gun Sprint: {pc.BaseUseGunSprint}");
+                    return;
+                }
+                case "groundsnap":
+                {
+                    if (hasValue)
+                    {
+                        var value = ConsoleParser.TryParseBoolean(vars[1], pc.snapPlayerToGroundOnSlopes);
+                        pc.snapPlayerToGroundOnSlopes = value;
+                    }
+
+                    console.Println($"Snap Player To Ground On Slopes: {pc.snapPlayerToGroundOnSlopes}");
+                    return;
+                }
                 default:
                     console.Println($"Unknown subcommand: {subLabel}");
                     return;
