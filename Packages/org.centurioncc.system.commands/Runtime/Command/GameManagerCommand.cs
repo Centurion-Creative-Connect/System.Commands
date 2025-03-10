@@ -15,8 +15,10 @@ namespace CenturionCC.System.Command
 
         public override string Label => "GameManager";
         public override string[] Aliases => new[] { "Game" };
+
         public override string Usage =>
             "<command> <canShoot|isMod|useHaptic|version|license>";
+
         public override string Description =>
             "Adjusts some game settings or prints out version/license of this project.";
 
@@ -76,7 +78,7 @@ namespace CenturionCC.System.Command
                 case "version":
                 {
                     console.Println($"Centurion System   - v{GameManager.GetVersion()}");
-                    console.Println("Centurion System Commands - v0.6.0-rc.2");
+                    console.Println("Centurion System Commands - v0.6.0-rc.3");
                     return GameManager.GetVersion();
                 }
                 case "license":
