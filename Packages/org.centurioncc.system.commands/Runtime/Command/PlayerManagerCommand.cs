@@ -775,16 +775,16 @@ namespace CenturionCC.System.Command
                 return HandleNonJoinedList(console);
 
             var shooterPlayers = playerManager.GetPlayers();
-            const string format = "{0, -20}, {1, 7}, {2, 7}, {3, 7}, {4, 7}, {5, 20}\n";
+            const string format = "{0, -20}, {1, 7}, {2, 7}, {3, 7}, {4, 7}, {5, 7}, {6, 20}";
             var activePlayerCount = 0;
             var list = "Player Instance Statuses:\n";
-            list += string.Format(format, "Name", "Active", "Team", "KD", "Role", "Id:DisplayName");
+            list += string.Format(format, "Name", "Active", "IsDead", "Team", "KD", "Role", "Id:DisplayName");
 
             foreach (var shooterPlayer in shooterPlayers)
             {
                 if (shooterPlayer == null)
                 {
-                    list += string.Format(format, "null", "null", "null", "null", "null", "null");
+                    list += string.Format(format, "null", "null", "null", "null", "null", "null", "null");
                     continue;
                 }
 
@@ -792,6 +792,7 @@ namespace CenturionCC.System.Command
                     format,
                     shooterPlayer.name,
                     shooterPlayer.IsAssigned,
+                    shooterPlayer.IsDead,
                     GetTeamNameByInt(shooterPlayer.TeamId),
                     $"{shooterPlayer.Kills}/{shooterPlayer.Deaths}",
                     shooterPlayer.Role != null ? shooterPlayer.Role.RoleName : "NULL",
