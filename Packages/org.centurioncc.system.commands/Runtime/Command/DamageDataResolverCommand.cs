@@ -58,7 +58,7 @@ namespace CenturionCC.System.Command
                     }
 
                     var assumedTime = resolver.GetAssumedDiedTime(playerId);
-                    return assumedTime.ToString("s");
+                    return assumedTime.ToString("O");
                 }
                 case "getconfirmed":
                 case "getconfirmedtime":
@@ -77,8 +77,8 @@ namespace CenturionCC.System.Command
                         return ConsoleLiteral.GetNone();
                     }
 
-                    var player = playerManager.GetPlayerById(playerId);
-                    return player.LastHitData.HitTime.ToString("s");
+                    var confirmedTime = resolver.GetConfirmedDiedTime(playerId);
+                    return confirmedTime.ToString("O");
                 }
                 case "ispaused":
                 {
