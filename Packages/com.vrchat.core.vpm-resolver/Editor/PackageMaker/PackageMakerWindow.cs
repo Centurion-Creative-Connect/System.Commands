@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Mail;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEditor;
+using UnityEditor.PackageManager;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using VRC.PackageManagement.Core;
 using VRC.PackageManagement.Core.Types.Packages;
 
 namespace VRC.PackageManagement.PackageMaker
@@ -28,7 +31,9 @@ namespace VRC.PackageManagement.PackageMaker
         private TextField _authorEmailField;
         private TextField _authorNameField;
         private TextField _authorUrlField;
+
         private TextField _packageIDField;
+
         // VisualElements
         private VisualElement _rootView;
         private TextField _targetAssetFolderField;
@@ -189,7 +194,7 @@ namespace VRC.PackageManagement.PackageMaker
 
         public static void ForceRefresh()
         {
-            MethodInfo method = typeof(UnityEditor.PackageManager.Client).GetMethod("Resolve",
+            MethodInfo method = typeof(Client).GetMethod("Resolve",
                 BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
             if (method != null)
                 method.Invoke(null, null);
@@ -260,7 +265,7 @@ namespace VRC.PackageManagement.PackageMaker
         {
             try
             {
-                var addr = new System.Net.Mail.MailAddress(evtNewValue);
+                var addr = new MailAddress(evtNewValue);
                 return addr.Address == evtNewValue;
             }
             catch
@@ -399,7 +404,7 @@ namespace VRC.PackageManagement.PackageMaker
             }
 
             string parentDir = new DirectoryInfo(targetDir)?.Parent.FullName;
-            var packageDir = Core.Utilities.CreateStarterPackage(_windowData.packageID, parentDir, packageType);
+            var packageDir = Utilities.CreateStarterPackage(_windowData.packageID, parentDir, packageType);
 
             // Modify manifest to add author
             // Todo: add support for passing author into CreateStarterPackage
