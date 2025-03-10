@@ -22,15 +22,14 @@ namespace CenturionCC.System.Command
         [SerializeField] [HideInInspector] [NewbieInject]
         private DamageDataResolver resolver;
 
-        [SerializeField]
-        private MockDamageData mockData;
+        [SerializeField] private MockDamageData mockData;
 
         public override string Label => "DamageDataResolver";
         public override string[] Aliases => new[] { "DmgResolver", "DDResolver" };
         public override string Description => "Configures DamageDataResolver";
 
         public override string Usage =>
-            "<command> <getAssumedDiedTime|getConfirmedDiedTime|testInvokeHit> [value] OR <command> <printEvents|pause|continue|isPaused>";
+            "<command> <getAssumedDiedTime|getConfirmedDiedTime|testInvokeHit|useTimeBasedCheck> [value] OR <command> <printEvents|pause|continue|isPaused>";
 
         public override string OnCommand(NewbieConsole console, string label, string[] vars, ref string[] envVars)
         {
@@ -153,6 +152,17 @@ namespace CenturionCC.System.Command
                     console.Println($"Requested resolve to player {NewbieUtils.GetPlayerName(model.VrcPlayer)}");
                     syncerMgr.OnHitDetection(pCol, mockData, model.Position);
                     return ConsoleLiteral.GetNone();
+                }
+                case "timebased":
+                case "usetimebasedcheck":
+                {
+                    if (vars.Length > 1)
+                    {
+                        resolver.useTimeBasedCheck = ConsoleParser.TryParseBoolean(vars[1], resolver.useTimeBasedCheck);
+                    }
+
+                    console.Println($"{resolver.useTimeBasedCheck}");
+                    return ConsoleLiteral.Of(resolver.useTimeBasedCheck);
                 }
                 default:
                 {
