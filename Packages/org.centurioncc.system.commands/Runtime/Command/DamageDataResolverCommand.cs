@@ -149,8 +149,8 @@ namespace CenturionCC.System.Command
                         "TestInvokeHit"
                     );
 
-                    console.Println($"Requested resolve to player {NewbieUtils.GetPlayerName(model.VrcPlayer)}");
-                    syncerMgr.OnHitDetection(pCol, mockData, model.Position);
+                    console.Println($"Directly damaged a player `{NewbieUtils.GetPlayerName(model.VrcPlayer)}`");
+                    pCol.OnDamage(mockData, model.Position);
                     return ConsoleLiteral.GetNone();
                 }
                 case "timebased":
