@@ -18,6 +18,7 @@ namespace CenturionCC.System.Command
 
         [SerializeField]
         private Transform[] teamPositions;
+
         [SerializeField]
         private Collider[] teamRegions;
 
@@ -29,16 +30,18 @@ namespace CenturionCC.System.Command
 
         [UdonSynced]
         private int _requestVersion;
+
         [UdonSynced]
         private int _targetOperation;
 
         [UdonSynced]
         private int _targetPlayerId;
+
         [UdonSynced]
         private int _targetTeam;
 
         public override string Label => "PlayerManager";
-        public override string[] Aliases => new[] { "Player" };
+        public override string[] Aliases => new[] { "Player", "PM" };
 
         public override string Usage => "<command>\n" +
                                         "   reset\n" +
@@ -64,6 +67,7 @@ namespace CenturionCC.System.Command
                                         "   list [-non-joined]\n" +
                                         "   collider <collider name> [true|false]\n" +
                                         "   debug [true|false]\n";
+
         public override string Description => "Perform player related manipulation such as add/remove etc.";
 
         public override string OnCommand(NewbieConsole console, string label, string[] vars, ref string[] envVars)
