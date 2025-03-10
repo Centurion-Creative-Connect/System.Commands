@@ -3,14 +3,14 @@
     "com.vrchat.core.vpm-resolver": {
       "version": "0.1.13"
     },
-    "org.centurioncc.system": {
-      "version": "0.4.3"
-    },
     "dev.derpynewbie.common": {
       "version": "0.3.4"
     },
     "dev.derpynewbie.logger": {
       "version": "0.1.7"
+    },
+    "org.centurioncc.system": {
+      "version": "0.6.0-rc.12"
     }
   },
   "locked": {
@@ -28,25 +28,25 @@
       "version": "0.1.26",
       "dependencies": {}
     },
-    "org.centurioncc.system": {
-      "version": "0.6.0-beta.1",
-      "dependencies": {
-        "com.vrchat.worlds": "~3.4.0",
-        "dev.derpynewbie.common": "~0.3.4",
-        "dev.derpynewbie.logger": "~0.1.8"
-      }
-    },
     "dev.derpynewbie.common": {
-      "version": "0.3.7",
+      "version": "0.4.0",
       "dependencies": {
         "com.vrchat.worlds": "^3.4.0"
       }
     },
     "dev.derpynewbie.logger": {
-      "version": "0.1.11",
+      "version": "0.2.1",
       "dependencies": {
         "com.vrchat.worlds": "^3.4.0",
-        "dev.derpynewbie.common": "0.3.x"
+        "dev.derpynewbie.common": ">=0.4.0"
+      }
+    },
+    "org.centurioncc.system": {
+      "version": "0.6.0-rc.12",
+      "dependencies": {
+        "com.vrchat.worlds": ">=3.4.0",
+        "dev.derpynewbie.common": ">=0.4.0",
+        "dev.derpynewbie.logger": ">=0.2.0"
       }
     }
   }
