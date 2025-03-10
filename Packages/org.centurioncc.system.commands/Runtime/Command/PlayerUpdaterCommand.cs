@@ -52,9 +52,9 @@ namespace CenturionCC.System.Command
                     if (vars.Length > 1)
                     {
                         var i = ConsoleParser.TryParseInt(vars[1]);
-                        if (i < 1 || i > updater.ModelCount - 1)
+                        if (i < 1 || i > updater.ModelCount)
                         {
-                            console.Println($"{i} exceeds capable range of 1 to {updater.ModelCount - 1}!");
+                            console.Println($"{i} exceeds capable range of 1 to {updater.ModelCount}!");
                             return ConsoleLiteral.GetNone();
                         }
 
