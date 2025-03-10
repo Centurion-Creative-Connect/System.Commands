@@ -15,8 +15,10 @@ namespace CenturionCC.System.Command
     {
         [SerializeField] [HideInInspector] [NewbieInject]
         private PlayerManager playerManager;
+
         [SerializeField] [HideInInspector] [NewbieInject]
         private DamageDataSyncerManager syncerMgr;
+
         [SerializeField] [HideInInspector] [NewbieInject]
         private DamageDataResolver resolver;
 
@@ -26,6 +28,7 @@ namespace CenturionCC.System.Command
         public override string Label => "DamageDataResolver";
         public override string[] Aliases => new[] { "DmgResolver", "DDResolver" };
         public override string Description => "Configures DamageDataResolver";
+
         public override string Usage =>
             "<command> <getAssumedDiedTime|getConfirmedDiedTime|testInvokeHit> [value] OR <command> <printEvents|pause|continue|isPaused>";
 
@@ -129,13 +132,13 @@ namespace CenturionCC.System.Command
                         return ConsoleLiteral.GetNone();
                     }
 
-                    if (model.playerView == null)
+                    if (model.PlayerView == null)
                     {
                         console.Println("Requires player model with view");
                         return ConsoleLiteral.GetNone();
                     }
 
-                    var view = model.playerView;
+                    var view = model.PlayerView;
                     var pCol = view.GetColliders()[0];
 
                     mockData.SetData(
