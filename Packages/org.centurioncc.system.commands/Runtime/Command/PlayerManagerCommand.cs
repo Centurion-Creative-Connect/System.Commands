@@ -53,6 +53,7 @@ namespace CenturionCC.System.Command
                                         "   stats [playerId]\n" +
                                         "   statsReset <playerId>\n" +
                                         "   statsResetAll\n" +
+                                        "   revive [playerId]\n" +
                                         "   teamReset\n" +
                                         "   team <team> [playerId]\n" +
                                         "   shuffleTeam [include moderators] [include green blue team]\n" +
@@ -109,6 +110,10 @@ namespace CenturionCC.System.Command
                 case "stresetall":
                 case "statsresetall":
                     return SendAllRequest(console, OpStatsResetAll, nameof(OpStatsResetAll), true);
+                case "revive":
+                case "rev":
+                case "res":
+                    return SendPlayerRequest(console, vars, OpRevive, nameof(OpRevive), -1, true, true);
                 case "t":
                 case "team":
                 case "changeteam":
@@ -495,6 +500,22 @@ namespace CenturionCC.System.Command
                         _console.Println(
                             $"{Prefix}Successfully finished process of {nameof(OpTeamRegionChange)}");
 
+                        return;
+                    }
+                    case OpRevive:
+                    {
+                        _console.Println(string.Format(ReceivedFormat, nameof(OpRevive),
+                            NewbieUtils.GetPlayerName(_targetPlayerId), _requestVersion));
+
+                        var player = playerManager.GetPlayerById(_targetPlayerId);
+                        if (player == null)
+                        {
+                            _console.LogError($"{Prefix} Failed to find player {_targetPlayerId} for revive");
+                            return;
+                        }
+
+                        player.Revive();
+                        player.Sync();
                         return;
                     }
                     default:
@@ -1067,6 +1088,7 @@ namespace CenturionCC.System.Command
         private const int OpTeamRegionChange = 15;
         private const int OpCreatorTagChange = 16;
         private const int OpFriendlyFireModeChange = 17;
+        private const int OpRevive = 18;
 
         #endregion
     }
