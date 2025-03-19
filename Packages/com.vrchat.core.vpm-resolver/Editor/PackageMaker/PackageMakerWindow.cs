@@ -8,7 +8,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.PackageManager;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using VRC.PackageManagement.Core;
@@ -58,7 +57,10 @@ namespace VRC.PackageManagement.PackageMaker
                 _windowData = PackageMakerWindowData.GetOrCreate();
             }
 
-            _rootView = rootVisualElement;
+            ScrollView scrollView = new();
+            rootVisualElement.Add(scrollView);
+
+            _rootView = scrollView;
             _rootView.name = "root-view";
             _rootView.styleSheets.Add((StyleSheet)Resources.Load("PackageMakerWindowStyle"));
 
