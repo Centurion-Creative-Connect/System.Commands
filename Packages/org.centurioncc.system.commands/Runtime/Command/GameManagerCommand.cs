@@ -78,7 +78,7 @@ namespace CenturionCC.System.Command
                 case "version":
                 {
                     console.Println($"Centurion System   - v{GameManager.GetVersion()}");
-                    console.Println("Centurion System Commands - v0.6.0-rc.3");
+                    console.Println("Centurion System Commands - v0.6.0");
                     return GameManager.GetVersion();
                 }
                 case "license":
