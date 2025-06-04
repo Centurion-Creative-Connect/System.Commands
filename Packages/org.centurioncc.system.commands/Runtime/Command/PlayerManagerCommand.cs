@@ -796,7 +796,7 @@ namespace CenturionCC.System.Command
                 return HandleNonJoinedList(console);
 
             var shooterPlayers = playerManager.GetPlayers();
-            const string format = "{0, -20}, {1, 7}, {2, 7}, {3, 7}, {4, 7}, {5, 7}, {6, 20}";
+            const string format = "{0, -20}, {1, 7}, {2, 7}, {3, 7}, {4, 7}, {5, 7}, {6, 20}\n";
             var activePlayerCount = 0;
             var list = "Player Instance Statuses:\n";
             list += string.Format(format, "Name", "Active", "IsDead", "Team", "KD", "Role", "Id:DisplayName");
