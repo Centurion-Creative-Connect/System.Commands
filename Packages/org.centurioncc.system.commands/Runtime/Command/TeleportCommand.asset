@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: TeleportCommand
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 96441569f6e904c4d84cc9207380481d,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: a19499a611e35e04cbcd0ab38083436d,
     type: 2}
   udonAssembly: 
   assemblyError: 

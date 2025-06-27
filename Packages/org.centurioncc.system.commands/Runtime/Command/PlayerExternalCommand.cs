@@ -1,5 +1,4 @@
 ﻿using CenturionCC.System.Player.External.HitDisplay;
-using CenturionCC.System.Player.External.PlayerTag;
 using DerpyNewbie.Common;
 using DerpyNewbie.Logger;
 using UdonSharp;
@@ -12,13 +11,11 @@ namespace CenturionCC.System.Command
     {
         [SerializeField] [HideInInspector] [NewbieInject]
         private ExternalHitDisplayManager hitDisplayManager;
-        [SerializeField] [HideInInspector] [NewbieInject]
-        private ExternalPlayerTagManager playerTagManager;
 
         public override string Label => "PlayerExternal";
         public override string[] Aliases => new[] { "PlayerExt", "PExt" };
         public override string Description => "Manipulate Players external information";
-        public override string Usage => "<command> <tag|hitDisplay> <option> [value]";
+        public override string Usage => "<command> <hitDisplay> <option> [value]";
 
         public override string OnCommand(NewbieConsole console, string label, string[] vars, ref string[] envVars)
         {
@@ -28,48 +25,12 @@ namespace CenturionCC.System.Command
             switch (vars[0].ToLower())
             {
                 case "tag":
-                    return HandleTagSubCommand(console, vars);
+                    return "no-op";
                 case "hitdisplay":
                     return HandleHitDisplaySubCommand(console, vars);
             }
 
             return console.PrintUsage(this);
-        }
-
-        private string HandleTagSubCommand(NewbieConsole console, string[] vars)
-        {
-            const string optionsString = "Options: clear, reconstruct, update";
-
-            if (vars.Length == 1)
-            {
-                console.Println(optionsString);
-                return ConsoleLiteral.GetNone();
-            }
-
-            switch (vars[1].ToLower())
-            {
-                case "clear":
-                {
-                    playerTagManager.ClearTag();
-                    console.Println("Cleared player tag");
-                    return ConsoleLiteral.GetTrue();
-                }
-                case "reconstruct":
-                {
-                    playerTagManager.ReconstructTag();
-                    console.Println("Reconstructed player tag");
-                    return ConsoleLiteral.GetTrue();
-                }
-                case "update":
-                {
-                    playerTagManager.UpdateTag();
-                    console.Println("Updated player tag");
-                    return ConsoleLiteral.GetTrue();
-                }
-            }
-
-            console.Println(optionsString);
-            return ConsoleLiteral.GetNone();
         }
 
         private string HandleHitDisplaySubCommand(NewbieConsole console, string[] vars)

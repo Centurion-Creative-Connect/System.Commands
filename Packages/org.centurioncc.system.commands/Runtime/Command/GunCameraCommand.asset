@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: GunCameraCommand
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: e8c4db0000019ed43a6afb5e93a9479c,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 6a545f4ce2950fb43a8d495048c598e5,
     type: 2}
   udonAssembly: 
   assemblyError: 

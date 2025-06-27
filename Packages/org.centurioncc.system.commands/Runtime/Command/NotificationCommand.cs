@@ -26,7 +26,7 @@ namespace CenturionCC.System.Command
                 result += " ";
             }
 
-            return result.Trim();
+            return result.Replace("\\n", "\n").Trim();
         }
 
         public override void OnActionCommand(NewbieConsole console, string label,

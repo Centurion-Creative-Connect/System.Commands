@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: GetGamePlayerCommand
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: de1727617c7a64440b15f4d318b8dc9f,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 332760323268bae47b34d485848f4a54,
     type: 2}
   udonAssembly: 
   assemblyError: 
@@ -218,7 +218,7 @@ MonoBehaviour:
       Data: 11|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: CenturionCC.System.Player.PlayerManager, CenturionCC.System
+      Data: CenturionCC.System.Player.PlayerManagerBase, CenturionCC.System
     - Name: 
       Entry: 8
       Data: 

@@ -13,21 +13,26 @@ namespace CenturionCC.System.Command
     {
         [SerializeField] [HideInInspector] [NewbieInject]
         private GunManager gunManager;
+
         private NewbieConsole _console;
 
         private int _lastRequestVersion;
+
         [UdonSynced]
         private int _requestVersion;
 
         [UdonSynced]
         private int _targetPlayerId;
+
         [UdonSynced]
         private byte _targetVariantId;
 
         public override string Label => "GunManager";
         public override string[] Aliases => new[] { "Gun" };
+
         public override string Usage =>
             "<command> <reset|slowReset|reload|trail|optimizationRange|rePickupDelay|collisionCheck|debug|summon|list|info>";
+
         public override string Description => "Perform gun related manipulation such as summon/reset/list etc.";
 
         public override void OnPreSerialization()
@@ -342,6 +347,7 @@ namespace CenturionCC.System.Command
                             out var rotOffset,
                             out var torque,
                             out var drag,
+                            out var damageAmount,
                             out var trailDuration,
                             out var trailCol,
                             out var lifeTime);
@@ -349,6 +355,7 @@ namespace CenturionCC.System.Command
                         result +=
                             "\nProjectileData:\n" +
                             $"  Spd: {velocity.ToString("F2")}\n" +
+                            $"  Dmg: {damageAmount}\n" +
                             $"  Drg: {drag}\n" +
                             $"  Tor: {torque.ToString("F2")}\n" +
                             $"  POf: {positionOffset.ToString("F2")}\n" +

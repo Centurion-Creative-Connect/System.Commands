@@ -8,6 +8,7 @@ namespace CenturionCC.System.Util
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class MockDamageData : DamageData
     {
+        private float _damageAmount;
         private Vector3 _damageOriginPos;
         private Quaternion _damageOriginRot;
         private DateTime _damageOriginTime;
@@ -15,14 +16,17 @@ namespace CenturionCC.System.Util
         private string _damageType;
         private bool _shouldApplyDamage;
 
+        public override Guid EventId => Guid.NewGuid();
         public override bool ShouldApplyDamage => _shouldApplyDamage;
         public override int DamagerPlayerId => _damagerPlayerId;
         public override Vector3 DamageOriginPosition => _damageOriginPos;
         public override Quaternion DamageOriginRotation => _damageOriginRot;
         public override DateTime DamageOriginTime => _damageOriginTime;
         public override string DamageType => _damageType;
+        public override float DamageAmount => _damageAmount;
 
-        public void SetData(bool apply, int playerId, Vector3 pos, Quaternion rot, DateTime time, string type)
+        public void SetData(bool apply, int playerId, Vector3 pos, Quaternion rot, DateTime time, string type,
+            float damageAmount)
         {
             _shouldApplyDamage = apply;
             _damagerPlayerId = playerId;
@@ -30,6 +34,7 @@ namespace CenturionCC.System.Util
             _damageOriginRot = rot;
             _damageOriginTime = time;
             _damageType = type;
+            _damageAmount = damageAmount;
         }
     }
 }
