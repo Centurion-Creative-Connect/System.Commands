@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: ForceVoiceResetCommand
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 18be7d44d0b103540bddbb148d17fa95,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: a8526f0648f73aa4590cd3002d16a1d1,
     type: 2}
   udonAssembly: 
   assemblyError: 

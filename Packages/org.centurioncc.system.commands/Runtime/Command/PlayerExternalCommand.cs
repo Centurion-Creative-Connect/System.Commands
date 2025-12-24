@@ -1,9 +1,8 @@
-﻿using CenturionCC.System.Player.External.HitDisplay;
+﻿using CenturionCC.System.Player.HitDisplay;
 using DerpyNewbie.Common;
 using DerpyNewbie.Logger;
 using UdonSharp;
 using UnityEngine;
-
 namespace CenturionCC.System.Command
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]

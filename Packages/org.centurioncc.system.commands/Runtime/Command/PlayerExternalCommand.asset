@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: PlayerExternalCommand
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 4e0137b889484754e9f5afd68701ea88,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 89c49b0b1824ccf479e62e67d6b36690,
     type: 2}
   udonAssembly: 
   assemblyError: 
@@ -218,8 +218,7 @@ MonoBehaviour:
       Data: 11|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: CenturionCC.System.Player.External.HitDisplay.ExternalHitDisplayManager,
-        CenturionCC.System
+      Data: CenturionCC.System.Player.HitDisplay.ExternalHitDisplayManager, CenturionCC.System
     - Name: 
       Entry: 8
       Data: 

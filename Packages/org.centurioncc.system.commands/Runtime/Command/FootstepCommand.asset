@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: FootstepCommand
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 98f792814d14b604186b454f4fe76f1c,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 1fecc600d9021464d9c17dd14c427dcc,
     type: 2}
   udonAssembly: 
   assemblyError: 

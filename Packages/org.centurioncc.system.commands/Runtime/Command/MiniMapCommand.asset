@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: MiniMapCommand
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 1e5db553f9f3ed14983d0e6301c3298d,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 10309ea93716717439e34ef57b5c1cf1,
     type: 2}
   udonAssembly: 
   assemblyError: 
