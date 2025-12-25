@@ -4,14 +4,13 @@ using DerpyNewbie.Logger;
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
-
 namespace CenturionCC.System.Command
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class GameManagerCommand : NewbieConsoleCommandHandler
     {
         [SerializeField] [HideInInspector] [NewbieInject]
-        private GameManager gameManager;
+        private CenturionSystem gameManager;
 
         public override string Label => "GameManager";
         public override string[] Aliases => new[] { "Game" };
@@ -30,8 +29,16 @@ namespace CenturionCC.System.Command
             {
                 case "canshoot":
                 {
-                    console.Println($"CanShoot: {gameManager.guns.CanLocalShoot}");
-                    return ConsoleLiteral.Of(gameManager.guns.CanLocalShoot);
+                    var locallyHeldGuns = gameManager.guns.GetLocallyHeldGunInstances();
+                    if (locallyHeldGuns.Length == 0)
+                    {
+                        console.Println("No guns are held locally");
+                        return ConsoleLiteral.GetFalse();
+                    }
+
+                    var canShoot = gameManager.guns.CanShoot(locallyHeldGuns[0], out var ruleId);
+                    console.Println($"CanShoot: {canShoot}, {ruleId}");
+                    return ConsoleLiteral.Of(canShoot);
                 }
                 case "mod":
                 case "moderator":
@@ -41,15 +48,7 @@ namespace CenturionCC.System.Command
                     console.Println($"IsModerator: {gameManager.roleProvider.GetPlayerRole().HasPermission()}");
                     return ConsoleLiteral.Of(gameManager.roleProvider.GetPlayerRole().HasPermission());
                 }
-                case "modmode":
-                {
-                    if (vars.Length >= 2 && console.CurrentRole.HasPermission())
-                        gameManager.moderatorTool.IsModeratorMode =
-                            ConsoleParser.TryParseBoolean(vars[1], gameManager.moderatorTool.IsModeratorMode);
 
-                    console.Println($"ModMode: {gameManager.moderatorTool.IsModeratorMode}");
-                    return ConsoleLiteral.Of(gameManager.moderatorTool.IsModeratorMode);
-                }
                 case "rc":
                 case "arc":
                 case "ricochetcount":
@@ -57,36 +56,33 @@ namespace CenturionCC.System.Command
                 {
                     if (vars.Length >= 2 && console.CurrentRole.HasPermission())
                     {
-                        gameManager.guns.allowedRicochetCount = ConsoleParser.TryParseInt(vars[1]);
+                        gameManager.guns.AllowedRicochetCount = ConsoleParser.TryParseInt(vars[1]);
                         Networking.SetOwner(Networking.LocalPlayer, gameManager.gameObject);
                         gameManager.RequestSerialization();
                     }
 
-                    console.Println($"AllowedRicochetCount: {gameManager.guns.allowedRicochetCount}");
-                    return ConsoleLiteral.Of(gameManager.guns.allowedRicochetCount);
+                    console.Println($"AllowedRicochetCount: {gameManager.guns.AllowedRicochetCount}");
+                    return ConsoleLiteral.Of(gameManager.guns.AllowedRicochetCount);
                 }
+                case "modmode":
                 case "haptic":
                 case "usehaptic":
                 {
-                    if (vars.Length >= 2)
-                        gameManager.hitEffect.useHaptic =
-                            ConsoleParser.TryParseBoolean(vars[1], gameManager.hitEffect.useHaptic);
-
-                    console.Println($"UseHaptic: {gameManager.hitEffect.useHaptic}");
-                    return ConsoleLiteral.Of(gameManager.hitEffect.useHaptic);
+                    console.Println("no-op");
+                    return "no-op";
                 }
                 case "version":
                 {
-                    console.Println($"Centurion System   - v{GameManager.GetVersion()}");
-                    console.Println("Centurion System Commands - v0.6.0");
-                    return GameManager.GetVersion();
+                    console.Println($"Centurion System   - v{gameManager.GetVersion()}");
+                    console.Println("Centurion System Commands - v0.7.0-alpha.1");
+                    return gameManager.GetVersion();
                 }
                 case "license":
                 {
-                    console.Println(GameManager.GetLicense());
+                    console.Println(gameManager.GetLicense());
                     console.Println(
                         "Centurion System Commands © 2022 by Centurion Creative Connect is licensed under CC BY-NC 4.0");
-                    return GameManager.GetLicense();
+                    return gameManager.GetLicense();
                 }
                 default:
                     return console.PrintUsage(this);

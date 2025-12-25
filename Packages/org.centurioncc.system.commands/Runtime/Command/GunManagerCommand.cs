@@ -4,28 +4,13 @@ using DerpyNewbie.Logger;
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
-using VRC.Udon.Common.Interfaces;
-
 namespace CenturionCC.System.Command
 {
-    [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
+    [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class GunManagerCommand : NewbieConsoleCommandHandler
     {
         [SerializeField] [HideInInspector] [NewbieInject]
-        private GunManager gunManager;
-
-        private NewbieConsole _console;
-
-        private int _lastRequestVersion;
-
-        [UdonSynced]
-        private int _requestVersion;
-
-        [UdonSynced]
-        private int _targetPlayerId;
-
-        [UdonSynced]
-        private byte _targetVariantId;
+        private GunManagerBase gunManager;
 
         public override string Label => "GunManager";
         public override string[] Aliases => new[] { "Gun" };
@@ -35,36 +20,6 @@ namespace CenturionCC.System.Command
 
         public override string Description => "Perform gun related manipulation such as summon/reset/list etc.";
 
-        public override void OnPreSerialization()
-        {
-            ProcessReceivedData();
-        }
-
-        public override void OnDeserialization()
-        {
-            ProcessReceivedData();
-        }
-
-        private void ProcessReceivedData()
-        {
-            if (Networking.IsMaster && _lastRequestVersion < _requestVersion)
-            {
-                _lastRequestVersion = _requestVersion;
-                var player = VRCPlayerApi.GetPlayerById(_targetPlayerId);
-                if (player == null || !player.IsValid())
-                {
-                    _console.LogError(
-                        "[GunManagerCommand] Could not process request: Target player id is invalid!\n" +
-                        $"Target PlayerId: {_targetPlayerId}, Target Variant Id: {_targetVariantId}");
-                    return;
-                }
-
-                var destPos = player.GetRotation() * new Vector3(0F, 0.7F, 1F) + player.GetPosition();
-                var destRot = Quaternion.identity;
-                var variantData = gunManager.GetVariantData(_targetVariantId);
-                gunManager.MasterOnly_SpawnWithData(variantData, destPos, destRot);
-            }
-        }
 
         private string HandleList(NewbieConsole console, string[] args)
         {
@@ -100,9 +55,9 @@ namespace CenturionCC.System.Command
             return msg;
         }
 
-        private static string GetVariantList(GunManager gunManager)
+        private static string GetVariantList(GunManagerBase gunManager)
         {
-            var variants = gunManager.VariantDataInstances;
+            var variants = gunManager.GetVariantDataInstances();
             const string format = "{0, -7}, {1, 20}";
             var result = "Available Variants:";
 
@@ -124,14 +79,13 @@ namespace CenturionCC.System.Command
             return result;
         }
 
-        private static string GetRemoteList(GunManager gunManager)
+        private static string GetRemoteList(GunManagerBase gunManager)
         {
-            var managedGuns = gunManager.ManagedGunInstances;
-            //    Name   , Local , Occ,    Pic,  Holst,    Opt,  VarId,    User,     Pos,  State, FireMode, Trigger, Shots, IDH
-            const string format =
-                "{0, -16}, {1, 5}, {2, 5}, {3, 5}, {4, 5}, {5, 5}, {6, 5}, {7, 20}, {8, 20}, {9, 8}, {10, 8}, {11, 8}, {12, 5}, {13, 5}";
+            var managedGuns = gunManager.GetGunInstances();
+            //                         Name,  Local,   Pick,  Holst,  VarId,    User,     Pos,  State,FireMode, Trigger,   Shots, IDH
+            const string format = "{0, -16}, {1, 5}, {2, 5}, {3, 5}, {4, 5}, {5, 20}, {6, 20}, {7, 8}, {8, 8}, {9, 8}, {10, 5}, {11, 5}";
             var activeCount = 0;
-            var result = "Remote Gun Statuses:";
+            var result = "Gun Statuses:";
 
             result = string.Join
             (
@@ -142,10 +96,8 @@ namespace CenturionCC.System.Command
                     format,
                     "Name",
                     "Local",
-                    "Occ",
                     "Pick",
                     "Holst",
-                    "Opt",
                     "VarId",
                     "User",
                     "Pos",
@@ -170,22 +122,20 @@ namespace CenturionCC.System.Command
                             format,
                             m.name,
                             m.IsLocal,
-                            m.IsOccupied,
                             m.IsPickedUp,
                             m.IsHolstered,
-                            m.IsOptimized,
-                            m.VariantDataUniqueId,
+                            m.VariantData != null ? $"{m.VariantData.UniqueId}" : "null",
                             NewbieUtils.GetPlayerName(m.CurrentHolder),
                             m.transform.position.ToString("F2"),
                             m.State.GetStateString(),
                             m.FireMode.GetStateString(),
                             m.Trigger.GetStateString(),
                             m.ShotCount,
-                            m.IsDoubleHandedGun
+                            m.CanBeTwoHanded
                         )
                     );
 
-                    if (m.IsOccupied)
+                    if (m.VariantData != null)
                         ++activeCount;
                 }
                 else
@@ -201,24 +151,6 @@ namespace CenturionCC.System.Command
             return result;
         }
 
-        public void RequestSlowReset()
-        {
-            if (Networking.IsMaster && _console)
-            {
-                _console.Println("[GunManagerCommand] Received slow reset request");
-                gunManager.MasterOnly_SlowlyResetRemoteGuns();
-            }
-        }
-
-        public void RequestFastReset()
-        {
-            if (Networking.IsMaster && _console)
-            {
-                _console.Println("[GunManagerCommand] Received fast reset request");
-                gunManager.MasterOnly_ResetRemoteGuns();
-            }
-        }
-
         public override string OnCommand(NewbieConsole console, string label, string[] vars, ref string[] envVars)
         {
             if (vars == null || vars.Length == 0) return console.PrintUsage(this);
@@ -227,66 +159,52 @@ namespace CenturionCC.System.Command
             {
                 case "r":
                 case "reset":
-                    console.Println("Requesting fast reset to master");
-                    SendCustomNetworkEvent(NetworkEventTarget.All, nameof(RequestFastReset));
-                    return ConsoleLiteral.GetNone();
                 case "sr":
                 case "slowreset":
-                    console.Println("Requesting slow reset to master");
-                    SendCustomNetworkEvent(NetworkEventTarget.All, nameof(RequestSlowReset));
+                    if (vars.ContainsString("-unused"))
+                    {
+                        console.Println("Requesting unused reset to master");
+                        gunManager._RequestResetAll(GunManagerResetType.Unused);
+                        return ConsoleLiteral.GetNone();
+                    }
+
+                    console.Println("Requesting reset to master");
+                    gunManager._RequestResetAll(GunManagerResetType.All);
                     return ConsoleLiteral.GetNone();
                 case "reload":
-                    gunManager.ReloadGuns();
-                    console.Println("<color=green>Reload complete</color>");
+                case "refresh":
+                    console.Println("Requesting refresh to master");
+                    gunManager._RequestRefresh();
                     return ConsoleLiteral.GetNone();
                 case "trail":
                     if (vars.Length >= 2)
-                        gunManager.useDebugBulletTrail =
-                            ConsoleParser.TryParseBoolean(vars[1], gunManager.useDebugBulletTrail);
+                        gunManager.UseDebugBulletTrail = ConsoleParser.TryParseBoolean(vars[1], gunManager.UseDebugBulletTrail);
 
-                    console.Println($"UseTrail: {gunManager.useDebugBulletTrail}");
-                    return ConsoleLiteral.Of(gunManager.useDebugBulletTrail);
-                case "or":
-                case "optimization":
-                case "optimizationrange":
-                    if (vars.Length >= 2)
-                        gunManager.optimizationRange = ConsoleParser.TryParseFloat(vars[1]);
-
-                    console.Println($"OptimizationRange: {gunManager.optimizationRange}");
-                    return ConsoleLiteral.Of(gunManager.optimizationRange);
+                    console.Println($"UseTrail: {gunManager.UseDebugBulletTrail}");
+                    return ConsoleLiteral.Of(gunManager.UseDebugBulletTrail);
                 case "arc":
                 case "ricochetcount":
                 case "allowedricochetcount":
                     if (vars.Length >= 2)
                     {
-                        gunManager.allowedRicochetCount = ConsoleParser.TryParseInt(vars[1]);
+                        gunManager.AllowedRicochetCount = ConsoleParser.TryParseInt(vars[1]);
                         Networking.SetOwner(Networking.LocalPlayer, gunManager.gameObject);
                         gunManager.RequestSerialization();
                     }
 
-                    console.Println($"AllowedRicochetCount: {gunManager.allowedRicochetCount}");
-                    return ConsoleLiteral.Of(gunManager.allowedRicochetCount);
-                case "rep":
-                case "repickup":
-                case "repickupdelay":
-                    if (vars.Length >= 2)
-                        gunManager.handleRePickupDelay = ConsoleParser.TryParseFloat(vars[1]);
-
-                    console.Println($"RePickupDelay: {gunManager.handleRePickupDelay}");
-                    return ConsoleLiteral.Of(gunManager.handleRePickupDelay);
+                    console.Println($"AllowedRicochetCount: {gunManager.AllowedRicochetCount}");
+                    return ConsoleLiteral.Of(gunManager.AllowedRicochetCount);
                 case "cc":
                 case "collision":
                 case "collisioncheck":
                     if (vars.Length >= 2)
-                        gunManager.useCollisionCheck =
-                            ConsoleParser.TryParseBoolean(vars[1], gunManager.useCollisionCheck);
+                        gunManager.UseCollisionCheck = ConsoleParser.TryParseBoolean(vars[1], gunManager.UseCollisionCheck);
 
-                    console.Println($"CollisionCheck: {gunManager.useCollisionCheck}");
-                    return ConsoleLiteral.Of(gunManager.useCollisionCheck);
+                    console.Println($"CollisionCheck: {gunManager.UseCollisionCheck}");
+                    return ConsoleLiteral.Of(gunManager.UseCollisionCheck);
                 case "debug":
                     if (vars.Length >= 2)
-                        gunManager.IsDebugGunHandleVisible =
-                            ConsoleParser.TryParseBoolean(vars[1], gunManager.IsDebugGunHandleVisible);
+                        gunManager.IsDebugGunHandleVisible = ConsoleParser.TryParseBoolean(vars[1], gunManager.IsDebugGunHandleVisible);
 
                     console.Println($"Debug: {gunManager.IsDebugGunHandleVisible}");
                     return ConsoleLiteral.Of(gunManager.IsDebugGunHandleVisible);
@@ -300,13 +218,13 @@ namespace CenturionCC.System.Command
                         return ConsoleLiteral.GetNone();
                     }
 
-                    _targetVariantId = ConsoleParser.TryParseByte(vars[1]);
-                    _targetPlayerId = Networking.LocalPlayer.playerId;
-                    ++_requestVersion;
-                    Networking.SetOwner(Networking.LocalPlayer, gameObject);
-                    RequestSerialization();
+                    var targetVariantId = ConsoleParser.TryParseByte(vars[1]);
+                    var targetRot = Networking.LocalPlayer.GetRotation();
+                    var targetPos = Networking.LocalPlayer.GetPosition() + Vector3.up + (targetRot * Vector3.forward);
+                    gunManager._RequestSpawn(targetVariantId, targetPos, targetRot);
+
                     console.Println(
-                        $"Requested to summon gun as {_targetVariantId} in front of {NewbieUtils.GetPlayerName(_targetPlayerId)}!");
+                        $"Requested to summon gun as {targetVariantId} in front of you!");
                     return ConsoleLiteral.GetNone();
                 case "l":
                 case "list":
@@ -335,7 +253,7 @@ namespace CenturionCC.System.Command
                         $"WeaponName    : {variantData.WeaponName}\n" +
                         $"HolsterSize   : {variantData.HolsterSize}\n" +
                         $"IsDoubleHanded: {variantData.IsDoubleHanded}\n" +
-                        $"MaxRPS/MaxRPM : {variantData.MaxRoundsPerSecond}/{variantData.MaxRoundsPerSecond * 60}";
+                        $"MaxRPS/MaxRPM : {variantData.RoundsPerSecond}/{variantData.RoundsPerSecond * 60}";
 
                     // Append ProjectileData information if provided
                     if (variantData.ProjectileData != null)
@@ -372,11 +290,6 @@ namespace CenturionCC.System.Command
                     return console.PrintUsage(this);
                 // ReSharper restore StringLiteralTypo
             }
-        }
-
-        public override void OnRegistered(NewbieConsole console)
-        {
-            _console = console;
         }
     }
 }

@@ -1,9 +1,8 @@
-﻿using CenturionCC.System.Gun.GunCamera;
+﻿using CenturionCC.System.Gimmick.GunCamera;
 using DerpyNewbie.Common;
 using DerpyNewbie.Logger;
 using UdonSharp;
 using UnityEngine;
-
 namespace CenturionCC.System.Command
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
