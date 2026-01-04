@@ -11,11 +11,11 @@ namespace CenturionCC.System.Command
     public class GetGamePlayerCommand : NewbieConsoleCommandHandler
     {
         [SerializeField] [HideInInspector] [NewbieInject]
-        private PlayerManager playerManager;
+        private PlayerManagerBase playerManager;
 
         public override string Label => "GetGamePlayer";
         public override string Description => "Gets game player information.";
-        public override string Usage => "<command> [-remote=playerId] <index|team|kill|death>";
+        public override string Usage => "<command> [-remote=playerId] <team|kill|death>";
 
         public override string OnCommand(NewbieConsole console, string label, string[] vars, ref string[] envVars)
         {
@@ -45,7 +45,7 @@ namespace CenturionCC.System.Command
             switch (vars[0])
             {
                 case "index":
-                    return ConsoleLiteral.Of(playerBase.Index);
+                    return "no-op";
                 case "team":
                     return ConsoleLiteral.Of(playerBase.TeamId);
                 case "kill":
